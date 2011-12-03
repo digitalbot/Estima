@@ -1,0 +1,7 @@
+//
+// Prefix header for all source files of the 'Estima' target in the 'Estima' project
+//
+
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+#endif
