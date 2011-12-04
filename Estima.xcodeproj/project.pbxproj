@@ -13,6 +13,12 @@
 		21F0BC15148A9C7D0012C5C9 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 21F0BC13148A9C7D0012C5C9 /* Credits.rtf */; };
 		21F0BC18148A9C7D0012C5C9 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 21F0BC17148A9C7D0012C5C9 /* AppDelegate.m */; };
 		21F0BC1B148A9C7D0012C5C9 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 21F0BC19148A9C7D0012C5C9 /* MainMenu.xib */; };
+		21F0BC22148A9C9F0012C5C9 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21F0BC21148A9C9F0012C5C9 /* Accelerate.framework */; };
+		21F0BC24148A9CAB0012C5C9 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21F0BC23148A9CAB0012C5C9 /* AudioToolbox.framework */; };
+		21F0BC26148A9CB00012C5C9 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21F0BC25148A9CB00012C5C9 /* AudioUnit.framework */; };
+		21F0BC28148A9CB60012C5C9 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21F0BC27148A9CB60012C5C9 /* AVFoundation.framework */; };
+		21F0BC2A148A9CBB0012C5C9 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21F0BC29148A9CBB0012C5C9 /* CoreAudio.framework */; };
+		21F0BC2E148A9D160012C5C9 /* WaveFileHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 21F0BC2D148A9D160012C5C9 /* WaveFileHandle.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,14 +27,21 @@
 		21F0BC07148A9C7D0012C5C9 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		21F0BC08148A9C7D0012C5C9 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		21F0BC09148A9C7D0012C5C9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		21F0BC0C148A9C7D0012C5C9 /* Estima-Info.plist */ = {isa = PBXFileReference; path = "Estima-Info.plist"; sourceTree = "<group>"; };
+		21F0BC0C148A9C7D0012C5C9 /* Estima-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Estima-Info.plist"; sourceTree = "<group>"; };
 		21F0BC0E148A9C7D0012C5C9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		21F0BC10148A9C7D0012C5C9 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		21F0BC12148A9C7D0012C5C9 /* Estima-Prefix.pch */ = {isa = PBXFileReference; path = "Estima-Prefix.pch"; sourceTree = "<group>"; };
+		21F0BC12148A9C7D0012C5C9 /* Estima-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Estima-Prefix.pch"; sourceTree = "<group>"; };
 		21F0BC14148A9C7D0012C5C9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
-		21F0BC16148A9C7D0012C5C9 /* AppDelegate.h */ = {isa = PBXFileReference; path = AppDelegate.h; sourceTree = "<group>"; };
+		21F0BC16148A9C7D0012C5C9 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		21F0BC17148A9C7D0012C5C9 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		21F0BC1A148A9C7D0012C5C9 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		21F0BC21148A9C9F0012C5C9 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		21F0BC23148A9CAB0012C5C9 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		21F0BC25148A9CB00012C5C9 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
+		21F0BC27148A9CB60012C5C9 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		21F0BC29148A9CBB0012C5C9 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		21F0BC2C148A9D160012C5C9 /* WaveFileHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WaveFileHandle.h; sourceTree = "<group>"; };
+		21F0BC2D148A9D160012C5C9 /* WaveFileHandle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WaveFileHandle.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +49,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				21F0BC2A148A9CBB0012C5C9 /* CoreAudio.framework in Frameworks */,
+				21F0BC28148A9CB60012C5C9 /* AVFoundation.framework in Frameworks */,
+				21F0BC26148A9CB00012C5C9 /* AudioUnit.framework in Frameworks */,
+				21F0BC24148A9CAB0012C5C9 /* AudioToolbox.framework in Frameworks */,
+				21F0BC22148A9C9F0012C5C9 /* Accelerate.framework in Frameworks */,
 				21F0BC05148A9C7D0012C5C9 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -63,6 +81,11 @@
 		21F0BC03148A9C7D0012C5C9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				21F0BC29148A9CBB0012C5C9 /* CoreAudio.framework */,
+				21F0BC27148A9CB60012C5C9 /* AVFoundation.framework */,
+				21F0BC25148A9CB00012C5C9 /* AudioUnit.framework */,
+				21F0BC23148A9CAB0012C5C9 /* AudioToolbox.framework */,
+				21F0BC21148A9C9F0012C5C9 /* Accelerate.framework */,
 				21F0BC04148A9C7D0012C5C9 /* Cocoa.framework */,
 				21F0BC06148A9C7D0012C5C9 /* Other Frameworks */,
 			);
@@ -82,10 +105,11 @@
 		21F0BC0A148A9C7D0012C5C9 /* Estima */ = {
 			isa = PBXGroup;
 			children = (
-				21F0BC16148A9C7D0012C5C9 /* AppDelegate.h */,
-				21F0BC17148A9C7D0012C5C9 /* AppDelegate.m */,
+				21F0BC2B148A9CE60012C5C9 /* App Main */,
 				21F0BC19148A9C7D0012C5C9 /* MainMenu.xib */,
 				21F0BC0B148A9C7D0012C5C9 /* Supporting Files */,
+				21F0BC2C148A9D160012C5C9 /* WaveFileHandle.h */,
+				21F0BC2D148A9D160012C5C9 /* WaveFileHandle.m */,
 			);
 			path = Estima;
 			sourceTree = "<group>";
@@ -100,6 +124,15 @@
 				21F0BC13148A9C7D0012C5C9 /* Credits.rtf */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		21F0BC2B148A9CE60012C5C9 /* App Main */ = {
+			isa = PBXGroup;
+			children = (
+				21F0BC17148A9C7D0012C5C9 /* AppDelegate.m */,
+				21F0BC16148A9C7D0012C5C9 /* AppDelegate.h */,
+			);
+			name = "App Main";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -129,6 +162,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0420;
+				ORGANIZATIONNAME = "kosuke nakamura";
 			};
 			buildConfigurationList = 21F0BBFA148A9C7C0012C5C9 /* Build configuration list for PBXProject "Estima" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -167,6 +201,7 @@
 			files = (
 				21F0BC11148A9C7D0012C5C9 /* main.m in Sources */,
 				21F0BC18148A9C7D0012C5C9 /* AppDelegate.m in Sources */,
+				21F0BC2E148A9D160012C5C9 /* WaveFileHandle.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
