@@ -23,8 +23,8 @@ const double kNormalizedRatio = 0.8;
 
 @private
     // datas
-    double *_data;                      // data (L)
-    double *_dataR;                     // data (R)
+    double *_data;                     // data (L)
+    double *_dataR;                    // data (R)
 
     // RIFF and WAVE chunk
     char           _fileTypeTag[4];     // 'RIFF'
@@ -58,8 +58,8 @@ const double kNormalizedRatio = 0.8;
 @property(readonly) unsigned int   sizeOfData;
 @property(readonly) unsigned int   numberOfSamples;
 
-@property(readonly) double *datas;
-@property(readonly) double *datasR;
+@property(readonly) double *data;
+@property(readonly) double *dataR;
 @property(readonly) double playTime;
 
 // initialize
@@ -70,13 +70,13 @@ const double kNormalizedRatio = 0.8;
                 samplesPerSec:(unsigned int)samplesPerSec
                 bitsPerSample:(unsigned short)bitsPerSample;
 
-- (id)initMonoWithData:(void *)data
+- (id)initMonoWithData:(void *)inData
               dataType:(eDataTypes)dataType
           numOfSamples:(unsigned int)numOfSamples
          samplesPerSec:(unsigned int)samplesPerSec;
 
-- (id)initStereoWithData:(void *)data
-               withDataR:(void *)dataR
+- (id)initStereoWithData:(void *)inData
+               withDataR:(void *)inDataR
                 dataType:(eDataTypes)dataType
             numOfSamples:(unsigned int)numOfSamples
            samplesPerSec:(unsigned int)samplesPerSec;
@@ -98,18 +98,18 @@ const double kNormalizedRatio = 0.8;
 // access to sample
 - (double)access:(unsigned int)index;
 - (double)accessR:(unsigned int)index;
-- (void)access:(unsigned int)index setData:(double)settingData;
-- (void)accessR:(unsigned int)index setData:(double)setttingData;
+- (void)access:(unsigned int)index setData:(double)sData;
+- (void)accessR:(unsigned int)index setData:(double)sData;
 
 // add data
-- (void)pushData:(void *)data
-       dataType:(eDataTypes)dataType
-    numOfAdding:(unsigned int)numOfAddSamples;
+- (void)pushData:(void *)aData
+        dataType:(eDataTypes)dataType
+     numOfAdding:(unsigned int)numOfAddSamples;
 
-- (void)pushData:(void *)data
-      withDataR:(void *)dataR
-       dataType:(eDataTypes)dataType
-    numOfAdding:(unsigned int)numOfAddSamples;
+- (void)pushData:(void *)aData
+       withDataR:(void *)aDataR
+        dataType:(eDataTypes)dataType
+     numOfAdding:(unsigned int)numOfAddSamples;
 
 // dump
 - (void)showHeader:(NSString *)name;

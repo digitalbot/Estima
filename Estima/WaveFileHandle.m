@@ -21,9 +21,10 @@
 @synthesize sizeOfData       = _sizeOfData;
 @synthesize numberOfSamples  = _numberOfSamples;
 
-@synthesize datas  = _datas;
-@synthesize datasR = _datasR;
+@synthesize data  = _data;
+@synthesize dataR = _dataR;
 
+// get playTime
 @dynamic playTime;
 - (double)playTime {
     double playTimeMilliSec;
@@ -40,12 +41,14 @@
     if (self) {
         FILE *pWavFile;
 
+        // file open
         pWavFile = fopen((char *)[fFilePath UTF8String], "rb");
         if (pWavFile == NULL) {
             printf("[ERROR]: Can't open the file\n");
             return nil;
         }
 
+        // 'RIFF' check
         fread(&_fileTypeTag, sizeof(_fileTypeTag), 1, pWavFile);
         if (memcmp(&_fileTypeTag, "RIFF", 4)) {
             printf("[ERROR]: This file is NOT 'RIFF' file.\n");
@@ -53,8 +56,10 @@
             return nil;
         }
 
+        // get riff size
         fread(&_sizeOfRIFF, sizeof(_sizeOfRIFF), 1, pWavFile);
 
+        // 'WAVE' check
         fread(&_riffTypeTag, sizeof(_riffTypeTag), 1, pWavFile);
         if (memcmp(&_riffTypeTag, "WAVE", 4)) {
             printf("[ERROR]: This file is NOT 'WAVE' file.\n");
@@ -62,6 +67,7 @@
             return nil;
         }
 
+        // 'fmt '
         fread(&_fmtChunkTag, sizeof(_fmtChunkTag), 1, pWavFile);
         if (memcmp(&_fmtChunkTag, "fmt ", 4)) {
             printf("[ERROR]: This file is NOT 'fmt ' type file.\n");
@@ -69,6 +75,7 @@
             return nil;
         }
 
+        // get header infometions
         fread(&_sizeOfFMT, sizeof(_sizeOfFMT), 1, pWavFile);
         fread(&_formatID, sizeof(_formatID), 1, pWavFile);
         fread(&_numberOfChannels, sizeof(_numberOfChannels), 1, pWavFile);
@@ -77,8 +84,10 @@
         fread(&_sizeOfBlock, sizeof(_sizeOfBlock), 1, pWavFile);
         fread(&_bitsPerSample, sizeof(_bitsPerSample), 1, pWavFile);
 
+        // set offset (default 36)
         _offset = (int)ftell(pWavFile);
 
+        // search data start
         BOOL counter = YES;
         while (counter) {
             fread(&_dataChunkTag, sizeof(_dataChunkTag), 1, pWavFile);
@@ -99,27 +108,29 @@
             }
         }
 
+        // get wave size
         fread(&_sizeOfData, sizeof(_sizeOfData), 1, pWavFile);
 
-        // apiece of samples
+        // samples apiece
         _numberOfSamples = _sizeOfData / (2 * _numberOfChannels);
 
-        // get data
+        // get wave data
         _data = calloc(_numberOfSamples, sizeof(double));
         if (STEREO) {
             _dataR = calloc(_numberOfSamples, sizeof(double));
         }
-
+        // cast
         double buf;
         for (int i=0; i<_numberOfSamples; i++) {
             fread(&buf, _bitsPerSample, 1, pWavFile);
-            _data[i] = (double)buf;
+            _data[i] = buf;
             if (STEREO) {
                 fread(&buf, _bitsPerSample, 1, pWavFile);
-                _dataR[i] = (double)buf;
+                _dataR[i] = buf;
             }
         }
         fclose(pWavFile);
+        // this handle contain normalized data <-1.0 ~ 1.0>
         [self normalize];
     }
     return self;
@@ -164,7 +175,7 @@
 }
 
 
-- (id)initMonoWithData:(void *)data
+- (id)initMonoWithData:(void *)inData
               dataType:(eDataTypes)dataType
           numOfSamples:(unsigned int)numOfSamples
          samplesPerSec:(unsigned int)samplesPerSec {
@@ -177,19 +188,19 @@
         switch (dataType) {
         case kIsChar:
             for (int i=0; i<numOfSamples; i++) {
-                _data[i] = (double)*((char *)data + i);
+                _data[i] = (double)*((char *)inData + i);
             }
             break;
 
         case kIsShort:
             for (int i=0; i<numOfSamples; i++) {
-                _data[i] = (double)*((short *)data + i);
+                _data[i] = (double)*((short *)inData + i);
             }
             break;
 
         case kIsFloat:
             for (int i=0; i<numOfSamples; i++) {
-                _data[i] = (double)*((float *)data + i);
+                _data[i] = (double)*((float *)inData + i);
             }
             break;
 
@@ -202,8 +213,8 @@
     return self;
 }
 
-- (id)initStereoWithData:(void *)data
-               withDataR:(void *)dataR
+- (id)initStereoWithData:(void *)inData
+               withDataR:(void *)inDataR
                 dataType:(eDataTypes)dataType
             numOfSamples:(unsigned int)numOfSamples
            samplesPerSec:(unsigned int)samplesPerSec {
@@ -216,22 +227,22 @@
         switch (dataType) {
         case kIsChar:
             for (int i=0; i<numOfSamples; i++) {
-                _data[i]  = (double)*((char *)data + i);
-                _dataR[i] = (double)*((char *)dataR + i);
+                _data[i]  = (double)*((char *)inData + i);
+                _dataR[i] = (double)*((char *)inDataR + i);
             }
             break;
 
         case kIsShort:
             for (int i=0; i<numOfSamples; i++) {
-                _data[i]  = (double)*((short *)data + i);
-                _dataR[i] = (double)*((short *)dataR + i);
+                _data[i]  = (double)*((short *)inData + i);
+                _dataR[i] = (double)*((short *)inDataR + i);
             }
             break;
 
         case kIsFloat:
             for (int i=0; i<numOfSamples; i++) {
-                _data[i]  = (double)*((float *)data + i);
-                _dataR[i] = (double)*((float *)dataR + i);
+                _data[i]  = (double)*((float *)inData + i);
+                _dataR[i] = (double)*((float *)inDataR + i);
             }
             break;
 
@@ -244,6 +255,7 @@
     return self;
 }
 
+// init from WaveFileHandle's data
 - (id)initMonoWithNormalizedData:(double *)dData
                     numOfSamples:(unsigned int)numOfSamples
                    samplesPerSec:(unsigned int)samplesPerSec
@@ -305,7 +317,6 @@
 #pragma mark - operation methods
 
 - (void)writeToFile:(NSString *)tFilePath {
-
     // open
     FILE *pWavFile;
     pWavFile = fopen([tFilePath UTF8String], "wb");
@@ -418,6 +429,8 @@
     fclose(pWavFile);
 }
 
+
+// accesser methods
 - (double)access:(unsigned int)index {
     return (_data[index]);
 }
@@ -426,78 +439,69 @@
     return (_dataR[index]);
 }
 
-- (void)access:(unsigned int)index setData:(double)settingData {
-    _data[index] = settingData;
+- (void)access:(unsigned int)index setData:(double)sData {
+    _data[index] = sData;
 }
 
-- (void)accessR:(unsigned int)index setData:(double)settingData {
-    _dataR[index] = settingData;
+- (void)accessR:(unsigned int)index setData:(double)sData {
+    _dataR[index] = sData;
 }
 
-- (BOOL)validatePushData_:(BOOL *)isNormalized
-                         :(void *)data
+// validate for pushData method (private)
+- (BOOL)validatePushData_:(void *)aData
+                         :(BOOL *)isNormalized
                          :(eDataTypes)dataType
                          :(unsigned int)numOfAddSamples {
 
-    BOOL tmp;
+    BOOL tmp = NO;
     if (numOfAddSamples <= 0) {
         printf("[ERROR]: num of adding is must be POSITIVE INTEGER.\n");
         return NO;
     }
-    else if (!_bitsPerSample == (unsigned short)dataType) {
-        if (dataType == kIsDouble) {
-            for (int i=0; i<_numberOfSamples; i++) {
-                // check normalized
 
-                if (*((double *)data + i) < -1.0 && 1.0 < *((double *)data + i)) {
-                    tmp = NO;
-                    isNormalized = &tmp;
-                    return YES;
-                }
+    if (dataType == kIsDouble) {
+        for (int i=0; i<_numberOfSamples; i++) {
+            // check normalized
+            if (*((double *)aData + i) < -1.0 && 1.0 < *((double *)aData + i)) {
+                tmp = NO;
+                isNormalized = &tmp;
+                return YES;
             }
-            tmp = YES;
-            isNormalized = &tmp;
         }
-        else {
-            printf("[ERROR]: dataType is different.\n");
-            return NO;
-        }
+        tmp = YES;
+        isNormalized = &tmp;
     }
     return YES;
 }
 
-- (void)pushData:(void *)data
+- (void)pushData:(void *)aData
         dataType:(eDataTypes)dataType
      numOfAdding:(unsigned int)numOfAddSamples {
 
     void *dummy = NULL;
-    [self pushData:data
+    [self pushData:aData
          withDataR:dummy
           dataType:dataType
        numOfAdding:numOfAddSamples];
 }
 
-- (void)pushData:(void *)data
-       withDataR:(void *)dataR
+- (void)pushData:(void *)aData
+       withDataR:(void *)aDataR
         dataType:(eDataTypes)dataType
      numOfAdding:(unsigned int)numOfAddSamples {
 
-    BOOL tmp;
     BOOL isNormalized = 0;
     // validation
-    tmp = [self validatePushData_:&isNormalized :data :dataType :numOfAddSamples];
-    if(!tmp) {
+    if(![self validatePushData_:aData :&isNormalized :dataType :numOfAddSamples]) {
         return;
     }
 
-    // if not normalized, un-normalize
+    // if adding is normalized, through this if block
     if (!isNormalized) {
-        double bufAbsLimit = (1 << (8 * _bitsPerSample)) / 2;
+        double bufAbsLimit = (1 << (8 * (unsigned int)dataType)) / 2;
         for (int i=0; i<_numberOfSamples; i++) {
-            [self access:i
-                  setData:([self access:i] * bufAbsLimit)];
-            [self accessR:i
-                  setData:([self accessR:i] * bufAbsLimit)];
+            _data[i] *= bufAbsLimit;
+            _dataR[i] *= bufAbsLimit;
         }
     }
 
@@ -505,44 +509,51 @@
     [self changeNumberOfSamples:numOfAddSamples];
 
     // set data
-    for (int i=0; i<numOfAddSamples; i++) {
-        switch (dataType) {
-        case 8:
-            [self access:(_numberOfSamples - numOfAddSamples + i)
-                  setData:(double)*((char *)data + i)];
-            if (STEREO) {
-                [self accessR:(_numberOfSamples - numOfAddSamples + i)
-                      setData:(double)*((char *)data + i)];
+    unsigned int originLength = _numberOfSamples - numOfAddSamples;
+    switch (dataType) {
+        case kIsChar:
+            for (int i=0; i<numOfAddSamples; i++) {
+                [self access:(originLength + i)
+                     setData:(double)*((char *)aData + i)];
+                if (STEREO) {
+                    [self accessR:(originLength + i)
+                          setData:(double)*((char *)aData + i)];
+                }
             }
             break;
 
-        case 16:
-            [self access:(_numberOfSamples - numOfAddSamples + i)
-                  setData:(double)*((short *)data + i)];
-            if (STEREO) {
-                [self accessR:(_numberOfSamples - numOfAddSamples + i)
-                      setData:(double)*((short *)data + i)];
+        case kIsShort:
+            for (int i=0; i<numOfAddSamples; i++) {
+                [self access:(originLength + i)
+                     setData:(double)*((short *)aData + i)];
+                if (STEREO) {
+                    [self accessR:(originLength + i)
+                          setData:(double)*((short *)aData + i)];
+                }
             }
             break;
 
-        case 32:
-            [self access:(_numberOfSamples - numOfAddSamples + i)
-                  setData:(double)*((float *)data + i)];
-            if (STEREO) {
-                [self accessR:(_numberOfSamples - numOfAddSamples + i)
-                      setData:(double)*((float *)data + i)];
+        case kIsFloat:
+            for (int i=0; i<numOfAddSamples; i++) {
+                [self access:(originLength + i)
+                     setData:(double)*((float *)aData + i)];
+                if (STEREO) {
+                    [self accessR:(originLength + i)
+                          setData:(double)*((float *)aData + i)];
+                }
             }
             break;
 
-        case 64:
-            [self access:(_numberOfSamples - numOfAddSamples + i)
-                  setData:(double)*((double *)data + i)];
-            if (STEREO) {
-                [self accessR:(_numberOfSamples - numOfAddSamples + i)
-                      setData:(double)*((double *)data + i)];
+        case kIsDouble:
+            for (int i=0; i<numOfAddSamples; i++) {
+                [self access:(originLength + i)
+                     setData:(double)*((double *)aData + i)];
+                if (STEREO) {
+                    [self accessR:(originLength + i)
+                          setData:(double)*((double *)aData + i)];
+                }
             }
-        break;
-        }
+            break;
     }
     [self normalize];
 }
@@ -589,13 +600,13 @@
     double bufAbsLimit = (1 << (8 * _bitsPerSample)) / 2;
     if (MONORAL) {
         for (int i=0; i<_numberOfSamples; i++) {
-            [self access:i setData:([self access:i] / bufAbsLimit)];
+            _data[i] /= bufAbsLimit;
         }
     }
     else if (STEREO) {
         for (int i=0; i<_numberOfSamples; i++) {
-            [self access:i setData:([self access:i] / bufAbsLimit)];
-            [self accessR:i setData:([self accessR:i] / bufAbsLimit)];
+            _data[i] /= bufAbsLimit;
+            _dataR[i] /= bufAbsLimit;
         }
     }
 }
@@ -625,9 +636,10 @@
 
         // normalize
         for (int i=0; i<_numberOfSamples; i++) {
-            [self access:i setData:([self access:i] * (1.0 / max) * gain)];
+            _data[i] *= (gain / max);
             if (STEREO) {
-                [self accessR:i setData:([self accessR:i] * (1.0 / max) * gain)];
+                _data[i] *= (gain / max);
+                _dataR[i] *= (gain / max);
             }
         }
     }
@@ -640,6 +652,7 @@
 }
 
 - (void)changeNumberOfSamples:(int)numOfSamples {
+
     unsigned int newLastPosition = _numberOfSamples + numOfSamples;
     // realloc
     _data = realloc(_data, sizeof(double) * newLastPosition);
@@ -651,32 +664,38 @@
     if (0 <= numOfSamples) {
         if (MONORAL) {
             for (int i=_numberOfChannels; i<newLastPosition; i++) {
-                [self access:i setData:0];
+                [self access:i setData:0.0];
             }
         }
         else if (STEREO) {
             for (int i=_numberOfChannels; i<newLastPosition; i++) {
-                [self access:i setData:0];
-                [self accessR:i setData:0];
+                [self access:i setData:0.0];
+                [self accessR:i setData:0.0];
             }
         }
     }
 
+    // rewrite header
+    unsigned int increasedByte = numOfSamples * _bitsPerSample * _numberOfChannels;
     _numberOfSamples += numOfSamples;
-    _sizeOfData += (unsigned int)(numOfSamples * _bitsPerSample * _numberOfChannels);
-    _sizeOfRIFF += (unsigned int)(numOfSamples * _bitsPerSample * _numberOfChannels);
+    _sizeOfData += increasedByte;
+    _sizeOfRIFF += increasedByte;
 }
 
+// STEREO to MONORAL
 - (void)monolize {
+
     if (STEREO) {
         for (int i=0; i<_numberOfSamples; i++) {
-            double average = ([self access:i] + [self accessR:i]) / 2.0;
-            [self access:i setData:average];
+            double average = (_data[i] + _dataR[i]) / 2.0;
+            _data[i] = average;
         }
+        // rewrite header
         _numberOfChannels = 1;
         _sizeOfBlock = _bitsPerSample * _numberOfChannels;
         _bytesPerSec = _sizeOfBlock * _samplesPerSec;
         _sizeOfData /= 2;
+        _sizeOfRIFF -= _sizeOfData;
 
         free(_dataR);
         _dataR = NULL;
@@ -686,7 +705,11 @@
     }
 }
 
+// add to DataHead silent samples
 - (void)unshiftSilentSamples:(unsigned int)numOfSamples {
+
+    double tmp;
+    // validation for overflow
     if (_numberOfSamples - numOfSamples <= 0) {
         printf("[ERROR]: Too many.\n");
         return;
@@ -696,32 +719,40 @@
     unsigned int originLength =  _numberOfSamples - numOfSamples;
     if (MONORAL) {
         for (int i=0; i<originLength; i++) {
-            [self access:(_numberOfSamples - i - 1)
-                  setData:[self access:(originLength - i - 1)]];
+            tmp = _data[originLength - i - 1];
+            _data[_numberOfSamples - i - 1] = tmp;
         }
         for (int i=0; i<numOfSamples; i++) {
-            [self access:i setData:0.0];
+            _data[i] = 0.0;
         }
     }
     else if (STEREO) {
         for (int i=0; i<originLength; i++) {
-            [self access:(_numberOfSamples - i - 1)
-                  setData:[self access:(originLength - i - 1)]];
-            [self accessR:(_numberOfSamples - i - 1)
-                  setData:[self accessR:(originLength - i - 1)]];
+            // L
+            tmp = _data[originLength - i - 1];
+            _data[_numberOfSamples - i - 1] = tmp;
+            // R
+            tmp = _dataR[originLength - i - 1];
+            _dataR[_numberOfSamples - i - 1] = tmp;
         }
         for (int i=0; i<numOfSamples; i++) {
-            [self access:i setData:0.0];
-            [self accessR:i setData:0.0];
+            _data[i] = 0.0;
+            _dataR[i] = 0.0;
         }
     }
 }
 
+// fill all sample zero
 - (void)allClear {
-    for (int i=0; i<_numberOfSamples; i++) {
-        [self access:i setData:0.0];
-        if (STEREO) {
-            [self accessR:i setData:0.0];
+    if (MONORAL) {
+        for (int i=0; i<_numberOfSamples; i++) {
+            _data[i] = 0.0;
+        }
+    }
+    else if (STEREO) {
+        for (int i=0; i<_numberOfSamples; i++) {
+            _data[i] = 0.0;
+            _dataR[i] = 0.0;
         }
     }
 }
