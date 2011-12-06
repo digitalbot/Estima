@@ -34,7 +34,7 @@ const double kNormalizedRatio = 0.8;
     // fmt chunk
     char           _fmtChunkTag[4];     // 'fmt '
     unsigned short _sizeOfFMT;          // 16 (PCM)
-    unsigned short _formatID;           // 1 (PCM)
+    unsigned short _formatID;           //  1 (PCM)
     unsigned short _numberOfChannels;   // number of channel
     unsigned int   _samplesPerSec;      // sampling frequency (numberOfsamples / second)
     unsigned int   _bytesPerSec;        // speed of data (sizeOfblock * numberOfchannels)
@@ -60,7 +60,10 @@ const double kNormalizedRatio = 0.8;
 
 @property(readonly) double *data;
 @property(readonly) double *dataR;
+
 @property(readonly) double playTime;
+@property(readonly) unsigned int bytesPerSample;
+@property(readonly) double bufAbsLimit;
 
 // initialize
 - (id)initWithFile:(NSString *)fFilePath;

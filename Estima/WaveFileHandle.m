@@ -27,10 +27,15 @@
 // get playTime
 @dynamic playTime;
 - (double)playTime {
-    double playTimeMilliSec;
-
-    playTimeMilliSec = (double)(_numberOfSamples / _samplesPerSec) / 1000.0;
-    return playTimeMilliSec;
+    return ((double)(_numberOfSamples / _samplesPerSec) / 1000.0);
+}
+@dynamic bytesPerSample;
+- (unsigned int)bytesPerSample {
+    return (_bitsPerSample / 8);
+}
+@dynamic bufAbsLimit;
+- (double) bufAbsLimit {
+    return ((1 << _bitsPerSample) / 2);
 }
 
 #pragma mark - initialize methods
@@ -112,7 +117,7 @@
         fread(&_sizeOfData, sizeof(_sizeOfData), 1, pWavFile);
 
         // samples apiece
-        _numberOfSamples = _sizeOfData / (2 * _numberOfChannels);
+        _numberOfSamples = _sizeOfData / (self.bytesPerSample * _numberOfChannels);
 
         // get wave data
         _data = calloc(_numberOfSamples, sizeof(double));
@@ -122,10 +127,10 @@
         // cast
         double buf;
         for (int i=0; i<_numberOfSamples; i++) {
-            fread(&buf, _bitsPerSample, 1, pWavFile);
+            fread(&buf, self.bytesPerSample, 1, pWavFile);
             _data[i] = buf;
             if (STEREO) {
-                fread(&buf, _bitsPerSample, 1, pWavFile);
+                fread(&buf, self.bytesPerSample, 1, pWavFile);
                 _dataR[i] = buf;
             }
         }
@@ -161,7 +166,7 @@
         _numberOfSamples  = numOfSamples;
         _bitsPerSample    = bitsPerSample;
         _samplesPerSec    = samplesPerSec;
-        _sizeOfBlock      = _numberOfChannels * sizeof(_bitsPerSample);
+        _sizeOfBlock      = _numberOfChannels * self.bytesPerSample;
         _sizeOfRIFF       = _numberOfSamples * _sizeOfBlock + _offset;
         _bytesPerSec      = _samplesPerSec * _sizeOfBlock;
         _sizeOfData       = _sizeOfBlock * _numberOfSamples;
@@ -342,12 +347,11 @@
 
     // data
     double dataBuf;
-    double bufAbsLimit = (1 << (8 * _bitsPerSample)) / 2;
     if (MONORAL) {
         switch (_bitsPerSample) {
         case 8:
             for (int i=0; i<_numberOfSamples; i++) {
-                dataBuf = _data[i] * bufAbsLimit;
+                dataBuf = _data[i] * self.bufAbsLimit;
                 char writingData = (char)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -355,7 +359,7 @@
 
         case 16:
             for (int i=0; i<_numberOfSamples; i++) {
-                dataBuf = _data[i] * bufAbsLimit;
+                dataBuf = _data[i] * self.bufAbsLimit;
                 short writingData = (short)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -363,7 +367,7 @@
 
         case 32:
             for (int i=0; i<_numberOfSamples; i++) {
-                dataBuf = _data[i] * bufAbsLimit;
+                dataBuf = _data[i] * self.bufAbsLimit;
                 float writingData = (float)dataBuf;
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -381,11 +385,11 @@
             for (int i=0; i<_numberOfSamples; i++) {
                 char writingData;
                 // L
-                dataBuf = _data[i] * bufAbsLimit;
+                dataBuf = _data[i] * self.bufAbsLimit;
                 writingData = (char)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
                 // R
-                dataBuf = _dataR[i] * bufAbsLimit;
+                dataBuf = _dataR[i] * self.bufAbsLimit;
                 writingData = (char)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -395,11 +399,11 @@
             for (int i=0; i<_numberOfSamples; i++) {
                 short writingData;
                 // L
-                dataBuf = _data[i] * bufAbsLimit;
+                dataBuf = _data[i] * self.bufAbsLimit;
                 writingData = (short)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
                 // R
-                dataBuf = _dataR[i] * bufAbsLimit;
+                dataBuf = _dataR[i] * self.bufAbsLimit;
                 writingData = (short)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -409,11 +413,11 @@
             for (int i=0; i<_numberOfSamples; i++) {
                 float writingData;
                 // L
-                dataBuf = _data[i] * bufAbsLimit;
+                dataBuf = _data[i] * self.bufAbsLimit;
                 writingData = (float)dataBuf;
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
                 // R
-                dataBuf = _dataR[i] * bufAbsLimit;
+                dataBuf = _dataR[i] * self.bufAbsLimit;
                 writingData = (float)dataBuf;
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -490,18 +494,18 @@
         dataType:(eDataTypes)dataType
      numOfAdding:(unsigned int)numOfAddSamples {
 
-    BOOL isNormalized = 0;
+    BOOL isNormalized = NO;
     // validation
     if(![self validatePushData_:aData :&isNormalized :dataType :numOfAddSamples]) {
         return;
     }
 
-    // if adding is normalized, through this if block
+    // if adding is normalized(=WaveFileHandle type Data), through this if-block
     if (!isNormalized) {
-        double bufAbsLimit = (1 << (8 * (unsigned int)dataType)) / 2;
+        double restoreRatio = (1 << (8 * (unsigned int)dataType)) / 2;
         for (int i=0; i<_numberOfSamples; i++) {
-            _data[i] *= bufAbsLimit;
-            _dataR[i] *= bufAbsLimit;
+            _data[i]  *= restoreRatio;
+            _dataR[i] *= restoreRatio;
         }
     }
 
@@ -597,16 +601,15 @@
 #pragma mark - sample calculation methods
 
 - (void)normalize {
-    double bufAbsLimit = (1 << (8 * _bitsPerSample)) / 2;
     if (MONORAL) {
         for (int i=0; i<_numberOfSamples; i++) {
-            _data[i] /= bufAbsLimit;
+            _data[i] /= self.bufAbsLimit;
         }
     }
     else if (STEREO) {
         for (int i=0; i<_numberOfSamples; i++) {
-            _data[i] /= bufAbsLimit;
-            _dataR[i] /= bufAbsLimit;
+            _data[i] /= self.bufAbsLimit;
+            _dataR[i] /= self.bufAbsLimit;
         }
     }
 }
@@ -676,7 +679,7 @@
     }
 
     // rewrite header
-    unsigned int increasedByte = numOfSamples * _bitsPerSample * _numberOfChannels;
+    unsigned int increasedByte = numOfSamples * self.bytesPerSample * _numberOfChannels;
     _numberOfSamples += numOfSamples;
     _sizeOfData += increasedByte;
     _sizeOfRIFF += increasedByte;
@@ -692,7 +695,7 @@
         }
         // rewrite header
         _numberOfChannels = 1;
-        _sizeOfBlock = _bitsPerSample * _numberOfChannels;
+        _sizeOfBlock = self.bytesPerSample * _numberOfChannels;
         _bytesPerSec = _sizeOfBlock * _samplesPerSec;
         _sizeOfData /= 2;
         _sizeOfRIFF -= _sizeOfData;
