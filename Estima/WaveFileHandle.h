@@ -17,14 +17,11 @@ typedef enum {
     kIsFloat  = 32,
     kIsDouble = 64,
 } eDataTypes;
-const double kNormalizedRatio = 0.8;
+//const double kNormalizedRatio = 0.8;
 
 @interface WaveFileHandle : NSObject {
 
 @private
-    // datas
-    double *_data;                     // data (L)
-    double *_dataR;                    // data (R)
 
     // RIFF and WAVE chunk
     char           _fileTypeTag[4];     // 'RIFF'
@@ -33,8 +30,8 @@ const double kNormalizedRatio = 0.8;
 
     // fmt chunk
     char           _fmtChunkTag[4];     // 'fmt '
-    unsigned short _sizeOfFMT;          // 16 (PCM)
-    unsigned short _formatID;           //  1 (PCM)
+    unsigned int   _sizeOfFMT;          // 16 (PCM)
+    unsigned short _formatTag;          //  1 (PCM)
     unsigned short _numberOfChannels;   // number of channel
     unsigned int   _samplesPerSec;      // sampling frequency (numberOfsamples / second)
     unsigned int   _bytesPerSec;        // speed of data (sizeOfblock * numberOfchannels)
@@ -42,11 +39,18 @@ const double kNormalizedRatio = 0.8;
     unsigned short _bitsPerSample;      // quantization bit rate (8, 16, 24, 32)
 
     // data chunk
+    unsigned int   _offset;             // starting position of data chunk
     char           _dataChunkTag[4];    // 'data'
     unsigned int   _sizeOfData;         // data size
+    // datas
+    double *_data;                      // data (L)
+    double *_dataR;                     // data (R)
+    
+    // not in specifications
     unsigned int   _numberOfSamples;    // number of samples (apiece)
-    unsigned int   _offset;             // starting position of data chunk
-
+    unsigned int   _bytesPerSample;     // bits rate / 8
+    double         _bufAbsLimit;        // for inverse internalize
+    
 }
 
 // property
@@ -56,14 +60,16 @@ const double kNormalizedRatio = 0.8;
 @property(readonly) unsigned short sizeOfBlock;
 @property(readonly) unsigned short bitsPerSample;
 @property(readonly) unsigned int   sizeOfData;
-@property(readonly) unsigned int   numberOfSamples;
 
 @property(readonly) double *data;
 @property(readonly) double *dataR;
 
-@property(readonly) double playTime;
+@property(readonly) unsigned int   numberOfSamples;
 @property(readonly) unsigned int bytesPerSample;
-@property(readonly) double bufAbsLimit;
+@property(readonly) double       bufAbsLimit;
+
+@property(readonly) double       playTime;
+
 
 // initialize
 - (id)initWithFile:(NSString *)fFilePath;
@@ -83,17 +89,6 @@ const double kNormalizedRatio = 0.8;
                 dataType:(eDataTypes)dataType
             numOfSamples:(unsigned int)numOfSamples
            samplesPerSec:(unsigned int)samplesPerSec;
-
-- (id)initMonoWithNormalizedData:(double *)dData
-                    numOfSamples:(unsigned int)numOfSamples
-                   samplesPerSec:(unsigned int)samplesPerSec
-                   bitsPerSample:(unsigned short)bitsPerSample;
-
-- (id)initStereoWithNormalizedData:(double *)dData
-                         withDataR:(double *)dDataR
-                      numOfSamples:(unsigned int)numOfSamples
-                     samplesPerSec:(unsigned int)samplesPerSec
-                     bitsPerSample:(unsigned short)bitsPerSample;
 
 // write to file
 - (void)writeToFile:(NSString *)tFilePath;
@@ -119,7 +114,7 @@ const double kNormalizedRatio = 0.8;
 - (void)showSamples;
 
 // operation
-- (void)normalize;
+- (void)internalize;
 - (void)normalizeWithGain:(double)gain;
 - (void)changeNumberOfSamples:(int)numOfSamples;
 - (void)monolize;

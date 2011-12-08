@@ -24,19 +24,25 @@
 @synthesize data  = _data;
 @synthesize dataR = _dataR;
 
+@synthesize bytesPerSample = _bytesPerSample;
+@synthesize bufAbsLimit    = _bufAbsLimit;
+
 // get playTime
 @dynamic playTime;
 - (double)playTime {
     return ((double)(_numberOfSamples / _samplesPerSec) / 1000.0);
 }
-@dynamic bytesPerSample;
-- (unsigned int)bytesPerSample {
-    return (_bitsPerSample / 8);
+
+#pragma mark - utils
+
+- (BOOL)checkAllocated:(void *)allocatedData {
+    if (allocatedData == NULL) {
+        printf("[ERROR]: FAIL memory allocate.\n");
+        return NO;
+    }
+    return YES;
 }
-@dynamic bufAbsLimit;
-- (double) bufAbsLimit {
-    return ((1 << _bitsPerSample) / 2);
-}
+
 
 #pragma mark - initialize methods
 
@@ -82,13 +88,17 @@
 
         // get header infometions
         fread(&_sizeOfFMT, sizeof(_sizeOfFMT), 1, pWavFile);
-        fread(&_formatID, sizeof(_formatID), 1, pWavFile);
+        fread(&_formatTag, sizeof(_formatTag), 1, pWavFile);
         fread(&_numberOfChannels, sizeof(_numberOfChannels), 1, pWavFile);
         fread(&_samplesPerSec, sizeof(_samplesPerSec), 1, pWavFile);
         fread(&_bytesPerSec, sizeof(_bytesPerSec), 1, pWavFile);
         fread(&_sizeOfBlock, sizeof(_sizeOfBlock), 1, pWavFile);
         fread(&_bitsPerSample, sizeof(_bitsPerSample), 1, pWavFile);
 
+        // utility data
+        _bytesPerSample = _bitsPerSample / 8; 
+        _bufAbsLimit    = (1 << _bitsPerSample) / 2;
+        
         // set offset (default 36)
         _offset = (int)ftell(pWavFile);
 
@@ -97,6 +107,7 @@
         while (counter) {
             fread(&_dataChunkTag, sizeof(_dataChunkTag), 1, pWavFile);
             if (memcmp(&_dataChunkTag, "data", 4)) {
+
                 // set offset next byte point
                 fseek(pWavFile, -3, SEEK_CUR);
                 _offset++;
@@ -117,26 +128,81 @@
         fread(&_sizeOfData, sizeof(_sizeOfData), 1, pWavFile);
 
         // samples apiece
-        _numberOfSamples = _sizeOfData / (self.bytesPerSample * _numberOfChannels);
+        _numberOfSamples = _sizeOfData / (_bytesPerSample * _numberOfChannels);
 
-        // get wave data
+        // get wave data start
         _data = calloc(_numberOfSamples, sizeof(double));
+        if (![self checkAllocated:_data]) {
+            return nil;
+        }
         if (STEREO) {
             _dataR = calloc(_numberOfSamples, sizeof(double));
-        }
-        // cast
-        double buf;
-        for (int i=0; i<_numberOfSamples; i++) {
-            fread(&buf, self.bytesPerSample, 1, pWavFile);
-            _data[i] = buf;
-            if (STEREO) {
-                fread(&buf, self.bytesPerSample, 1, pWavFile);
-                _dataR[i] = buf;
+            if (![self checkAllocated:_dataR]) {
+                return nil;
             }
         }
+        void *buf;
+        switch (_bitsPerSample) {
+            case 8:
+                for (int i=0; i<_numberOfSamples; i++) {
+                    fread(&buf, _bytesPerSample, 1 , pWavFile);
+                    _data[i] = (double)*(char *)&buf;
+                    if (STEREO) {
+                        fread(&buf, _bytesPerSample, 1 , pWavFile);
+                        _dataR[i] = (double)*(char *)&buf;
+                    }
+                }
+                break;
+                
+            case 16:
+                for (int i=0; i<_numberOfSamples; i++) {
+                    fread(&buf, _bytesPerSample, 1 , pWavFile);
+                    _data[i] = (double)*(short *)&buf;
+                    if (STEREO) {
+                        fread(&buf, _bytesPerSample, 1 , pWavFile);
+                        _dataR[i] = (double)*(short *)&buf;
+                    }
+                }
+                break;
+                
+            case 32:
+                // ieee float
+                if (_formatTag == 3) {
+                    for (int i=0; i<_numberOfSamples; i++) {
+                        fread(&buf, _bytesPerSample, 1 , pWavFile);
+                        _data[i] = (double)*(float *)&buf;
+                        if (STEREO) {
+                            fread(&buf, _bytesPerSample, 1 , pWavFile);
+                            _dataR[i] = (double)*(float *)&buf;
+                        }
+                    }
+                }
+                // 32bit int (int supported only from file)
+                else if (_formatTag == 1) {
+                    for (int i=0; i<_numberOfSamples; i++) {
+                        fread(&buf, _bytesPerSample, 1 , pWavFile);
+                        _data[i] = (double)*(int *)&buf;
+                        if (STEREO) {
+                            fread(&buf, _bytesPerSample, 1 , pWavFile);
+                            _dataR[i] = (double)*(int *)&buf;
+                        }
+                    }
+                }
+                else {
+                    printf("[ERROR]: Don't know this format.\n");
+                    fclose(pWavFile);
+                    return nil;
+                }
+                break;
+                
+            default:
+                printf("[ERROR]: This handle can not open this bit rate.\n");
+                fclose(pWavFile);
+                return nil;
+                break;
+        }
         fclose(pWavFile);
-        // this handle contain normalized data <-1.0 ~ 1.0>
-        [self normalize];
+        [self internalize];
     }
     return self;
 }
@@ -150,30 +216,47 @@
     self = [super init];
     if (self) {
         // default header
-        char fileTypeTag[4]  = { 'R', 'I', 'F', 'F' };
-        char riffTypeTag[4]  = { 'W', 'A', 'V', 'E' };
-        char fmtChunkTag[4]  = { 'f', 'm', 't', ' ' };
-        char dataChunkTag[4] = { 'd', 'a', 't', 'a' };
-        strcpy(_fileTypeTag,  fileTypeTag);
-        strcpy(_riffTypeTag,  riffTypeTag);
-        strcpy(_fmtChunkTag,  fmtChunkTag);
-        strcpy(_dataChunkTag, dataChunkTag);
-
+        strncpy(_fileTypeTag, "RIFF", 4);
+        strncpy(_riffTypeTag, "WAVE", 4);
+        strncpy(_fmtChunkTag, "fmt ", 4);
+        strncpy(_dataChunkTag, "data", 4);
+        unsigned short wFormatTag;
+        switch (bitsPerSample) {
+            case 32:
+            case 64:
+                wFormatTag = 3;
+                break;
+                
+            default:
+                wFormatTag = 1;
+                break;
+        }
+        
         _offset           = 36;
         _sizeOfFMT        = 16;
-        _formatID         = 1;
+        _formatTag        = wFormatTag;
         _numberOfChannels = ch;
         _numberOfSamples  = numOfSamples;
         _bitsPerSample    = bitsPerSample;
         _samplesPerSec    = samplesPerSec;
-        _sizeOfBlock      = _numberOfChannels * self.bytesPerSample;
-        _sizeOfRIFF       = _numberOfSamples * _sizeOfBlock + _offset;
+        
+        _bytesPerSample   = _bitsPerSample / 8;
+        _bufAbsLimit      = (1 << _bitsPerSample) / 2;
+        
+        _sizeOfBlock      = _numberOfChannels * _bytesPerSample;
+        _sizeOfRIFF       = _numberOfSamples * _sizeOfBlock + _offset - 8;
         _bytesPerSec      = _samplesPerSec * _sizeOfBlock;
         _sizeOfData       = _sizeOfBlock * _numberOfSamples;
-
+        
         _data = calloc(_numberOfSamples, sizeof(double));
+        if (![self checkAllocated:_data]) {
+            return nil;
+        }
         if (STEREO) {
             _dataR = calloc(_numberOfSamples, sizeof(double));
+            if (![self checkAllocated:_dataR]) {
+                return nil;
+            }
         }
     }
     return self;
@@ -189,31 +272,39 @@
                            numOfChannels:1
                            samplesPerSec:samplesPerSec
                            bitsPerSample:(unsigned short)dataType];
+
+    //_data[i] = (double)*(((short *)inData) + i); // this is ok.
     if (self) {
         switch (dataType) {
-        case kIsChar:
-            for (int i=0; i<numOfSamples; i++) {
-                _data[i] = (double)*((char *)inData + i);
-            }
-            break;
+            case kIsChar:
+                for (int i=0; i<numOfSamples; i++) {
+                    _data[i] = (double)((char *)inData)[i];
+                }
+                break;
+                
+            case kIsShort:
+                for (int i=0; i<numOfSamples; i++) {
+                    _data[i] = (double)((short *)inData)[i];
+                }
+                break;
+                
+            case kIsFloat:
+                for (int i=0; i<numOfSamples; i++) {
+                    _data[i] = (double)((float *)inData)[i];
+                }
+                break;
+                
+            case kIsDouble:
+                for (int i=0; i<numOfSamples; i++) {
+                    _data[i] = ((double *)inData)[i];
+                }
+                break;
 
-        case kIsShort:
-            for (int i=0; i<numOfSamples; i++) {
-                _data[i] = (double)*((short *)inData + i);
-            }
-            break;
-
-        case kIsFloat:
-            for (int i=0; i<numOfSamples; i++) {
-                _data[i] = (double)*((float *)inData + i);
-            }
-            break;
-
-        case kIsDouble:
-            printf("[ERROR]: Call other init method.\n");
-            return nil;
+            default:
+                printf("[ERROR]: Call other init method.\n");
+                return nil;
         }
-        [self normalize];
+        [self internalize];
     }
     return self;
 }
@@ -230,83 +321,39 @@
                            bitsPerSample:(unsigned int)dataType];
     if (self) {
         switch (dataType) {
-        case kIsChar:
-            for (int i=0; i<numOfSamples; i++) {
-                _data[i]  = (double)*((char *)inData + i);
-                _dataR[i] = (double)*((char *)inDataR + i);
-            }
-            break;
-
-        case kIsShort:
-            for (int i=0; i<numOfSamples; i++) {
-                _data[i]  = (double)*((short *)inData + i);
-                _dataR[i] = (double)*((short *)inDataR + i);
-            }
-            break;
-
-        case kIsFloat:
-            for (int i=0; i<numOfSamples; i++) {
-                _data[i]  = (double)*((float *)inData + i);
-                _dataR[i] = (double)*((float *)inDataR + i);
-            }
-            break;
-
-        case kIsDouble:
-            printf("[ERROR]: Call other init method.\n");
-            return nil;
-        }
-        [self normalize];
-    }
-    return self;
-}
-
-// init from WaveFileHandle's data
-- (id)initMonoWithNormalizedData:(double *)dData
-                    numOfSamples:(unsigned int)numOfSamples
-                   samplesPerSec:(unsigned int)samplesPerSec
-                   bitsPerSample:(unsigned short)bitsPerSample {
-
-    self = [self initWithNumberOfSamples:numOfSamples
-                           numOfChannels:1
-                           samplesPerSec:samplesPerSec
-                           bitsPerSample:bitsPerSample];
-
-    if (self) {
-        for (int i=0; i<numOfSamples; i++) {
-            if (dData[i] < -1.0 && 1.0 < dData[i]) {
-                printf("[ERROR]: These data are NOT normalized.\n");
+            case kIsChar:
+                for (int i=0; i<numOfSamples; i++) {
+                    _data[i]  = (double)((char *)inData)[i];
+                    _dataR[i] = (double)((char *)inDataR)[i];
+                }
+                break;
+                
+            case kIsShort:
+                for (int i=0; i<numOfSamples; i++) {
+                    _data[i]  = (double)((short *)inData)[i];
+                    _dataR[i] = (double)((short *)inDataR)[i];
+                }
+                break;
+                
+            case kIsFloat:
+                for (int i=0; i<numOfSamples; i++) {
+                    _data[i]  = (double)((float *)inData)[i];
+                    _dataR[i] = (double)((float *)inDataR)[i];
+                }
+                break;
+                
+            case kIsDouble:
+                for (int i=0; i<numOfSamples; i++) {
+                    _data[i]  = ((double *)inData)[i];
+                    _dataR[i] = ((double *)inDataR)[i];
+                }
+                break;
+                
+            default:
+                printf("[ERROR]: Call other init method.\n");
                 return nil;
-            }
-            _data[i] = dData[i];
         }
-    }
-    return self;
-}
-
-- (id)initStereoWithNormalizedData:(double *)dData
-                         withDataR:(double *)dDataR
-                      numOfSamples:(unsigned int)numOfSamples
-                     samplesPerSec:(unsigned int)samplesPerSec
-                     bitsPerSample:(unsigned short)bitsPerSample {
-
-    self = [self initWithNumberOfSamples:numOfSamples
-                           numOfChannels:2
-                           samplesPerSec:samplesPerSec
-                           bitsPerSample:bitsPerSample];
-
-    if (self) {
-        for (int i=0; i<numOfSamples; i++) {
-            if (dData[i] < -1.0 && 1.0 < dData[i]) {
-                printf("[ERROR]: These data are NOT normalized.\n");
-                return nil;
-            }
-            if (dDataR[i] < -1.0 && 1.0 < dDataR[i]) {
-                printf("[ERROR]: These data are NOT normalized.\n");
-                return nil;
-            }
-            _data[i]  = dData[i];
-            _dataR[i] = dDataR[i];
-        }
+        [self internalize];
     }
     return self;
 }
@@ -336,7 +383,7 @@
     fwrite(&_riffTypeTag, sizeof(_riffTypeTag), 1, pWavFile);
     fwrite(&_fmtChunkTag, sizeof(_fmtChunkTag), 1, pWavFile);
     fwrite(&_sizeOfFMT, sizeof(_sizeOfFMT), 1, pWavFile);
-    fwrite(&_formatID, sizeof(_formatID), 1, pWavFile);
+    fwrite(&_formatTag, sizeof(_formatTag), 1, pWavFile);
     fwrite(&_numberOfChannels, sizeof(_numberOfChannels), 1, pWavFile);
     fwrite(&_samplesPerSec, sizeof(_samplesPerSec), 1, pWavFile);
     fwrite(&_bytesPerSec, sizeof(_bytesPerSec), 1, pWavFile);
@@ -351,7 +398,7 @@
         switch (_bitsPerSample) {
         case 8:
             for (int i=0; i<_numberOfSamples; i++) {
-                dataBuf = _data[i] * self.bufAbsLimit;
+                dataBuf = _data[i] * _bufAbsLimit;
                 char writingData = (char)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -359,7 +406,7 @@
 
         case 16:
             for (int i=0; i<_numberOfSamples; i++) {
-                dataBuf = _data[i] * self.bufAbsLimit;
+                dataBuf = _data[i] * _bufAbsLimit;
                 short writingData = (short)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -367,7 +414,7 @@
 
         case 32:
             for (int i=0; i<_numberOfSamples; i++) {
-                dataBuf = _data[i] * self.bufAbsLimit;
+                dataBuf = _data[i];
                 float writingData = (float)dataBuf;
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -385,11 +432,11 @@
             for (int i=0; i<_numberOfSamples; i++) {
                 char writingData;
                 // L
-                dataBuf = _data[i] * self.bufAbsLimit;
+                dataBuf = _data[i] * _bufAbsLimit;
                 writingData = (char)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
                 // R
-                dataBuf = _dataR[i] * self.bufAbsLimit;
+                dataBuf = _dataR[i] * _bufAbsLimit;
                 writingData = (char)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -399,11 +446,11 @@
             for (int i=0; i<_numberOfSamples; i++) {
                 short writingData;
                 // L
-                dataBuf = _data[i] * self.bufAbsLimit;
+                dataBuf = _data[i] * _bufAbsLimit;
                 writingData = (short)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
                 // R
-                dataBuf = _dataR[i] * self.bufAbsLimit;
+                dataBuf = _dataR[i] * _bufAbsLimit;
                 writingData = (short)(dataBuf + 0.5);
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -413,11 +460,11 @@
             for (int i=0; i<_numberOfSamples; i++) {
                 float writingData;
                 // L
-                dataBuf = _data[i] * self.bufAbsLimit;
+                dataBuf = _data[i];
                 writingData = (float)dataBuf;
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
                 // R
-                dataBuf = _dataR[i] * self.bufAbsLimit;
+                dataBuf = _dataR[i];
                 writingData = (float)dataBuf;
                 fwrite(&writingData, sizeof(writingData), 1, pWavFile);
             }
@@ -453,7 +500,7 @@
 
 // validate for pushData method (private)
 - (BOOL)validatePushData_:(void *)aData
-                         :(BOOL *)isNormalized
+                         :(BOOL *)isInternalized
                          :(eDataTypes)dataType
                          :(unsigned int)numOfAddSamples {
 
@@ -464,16 +511,27 @@
     }
 
     if (dataType == kIsDouble) {
-        for (int i=0; i<_numberOfSamples; i++) {
-            // check normalized
-            if (*((double *)aData + i) < -1.0 && 1.0 < *((double *)aData + i)) {
+        for (int i=0; i<numOfAddSamples; i++) {
+            if (1.0 < fabs(((double *)aData)[i])) {
                 tmp = NO;
-                isNormalized = &tmp;
+                isInternalized = &tmp;
                 return YES;
             }
         }
         tmp = YES;
-        isNormalized = &tmp;
+        isInternalized = &tmp;
+    }
+    else if (dataType == kIsFloat) {
+        for (int i=0; i<numOfAddSamples; i++) {
+            if (1.0 < fabs(((float *)aData)[i])) {
+                tmp = NO;
+                isInternalized = &tmp;
+                return YES;
+            }
+        }
+        tmp = YES;
+        isInternalized = &tmp;
+        
     }
     return YES;
 }
@@ -494,15 +552,15 @@
         dataType:(eDataTypes)dataType
      numOfAdding:(unsigned int)numOfAddSamples {
 
-    BOOL isNormalized = NO;
+    BOOL isInternalized = NO;
     // validation
-    if(![self validatePushData_:aData :&isNormalized :dataType :numOfAddSamples]) {
+    if(![self validatePushData_:aData :&isInternalized :dataType :numOfAddSamples]) {
         return;
     }
 
     // if adding is normalized(=WaveFileHandle type Data), through this if-block
-    if (!isNormalized) {
-        double restoreRatio = (1 << (8 * (unsigned int)dataType)) / 2;
+    if (!isInternalized) {
+        double restoreRatio = (1 << (unsigned int)dataType) / 2;
         for (int i=0; i<_numberOfSamples; i++) {
             _data[i]  *= restoreRatio;
             _dataR[i] *= restoreRatio;
@@ -517,49 +575,44 @@
     switch (dataType) {
         case kIsChar:
             for (int i=0; i<numOfAddSamples; i++) {
-                [self access:(originLength + i)
-                     setData:(double)*((char *)aData + i)];
+                _data[originLength + i] = (double)((char *)aData)[i];
                 if (STEREO) {
-                    [self accessR:(originLength + i)
-                          setData:(double)*((char *)aData + i)];
+                    _dataR[originLength + i] = (double)((char *)aDataR)[i];
                 }
             }
             break;
 
         case kIsShort:
             for (int i=0; i<numOfAddSamples; i++) {
-                [self access:(originLength + i)
-                     setData:(double)*((short *)aData + i)];
+                _data[originLength + i] = (double)((short *)aData)[i];
                 if (STEREO) {
-                    [self accessR:(originLength + i)
-                          setData:(double)*((short *)aData + i)];
+                    _dataR[originLength + i] = (double)((short *)aDataR)[i];
                 }
             }
             break;
 
         case kIsFloat:
             for (int i=0; i<numOfAddSamples; i++) {
-                [self access:(originLength + i)
-                     setData:(double)*((float *)aData + i)];
+                _data[originLength + i] = (double)((float *)aData)[i];
                 if (STEREO) {
-                    [self accessR:(originLength + i)
-                          setData:(double)*((float *)aData + i)];
+                    _dataR[originLength + i] = (double)((float *)aDataR)[i];
                 }
             }
             break;
 
         case kIsDouble:
             for (int i=0; i<numOfAddSamples; i++) {
-                [self access:(originLength + i)
-                     setData:(double)*((double *)aData + i)];
+                _data[originLength + i] = ((double *)aData)[i];
                 if (STEREO) {
-                    [self accessR:(originLength + i)
-                          setData:(double)*((double *)aData + i)];
+                    _dataR[originLength + i] = ((double *)aDataR)[i];
                 }
             }
             break;
+            
+        default:
+            printf("[ERROR]: This bit rate is not known.\n");
     }
-    [self normalize];
+    [self internalize];
 }
 
 #pragma mark - dump methods
@@ -567,18 +620,18 @@
 - (void)showHeader:(NSString *)name {
     NSLog(@"----- HEADER INFO %@ -----", name);
     NSLog(@"allSize: %d", _sizeOfRIFF + 8);
-    NSLog(@"fileType: %s", _fileTypeTag);
+    NSLog(@"fileType: %c%c%c%c", _fileTypeTag[0], _fileTypeTag[1], _fileTypeTag[2], _fileTypeTag[3]);
     NSLog(@"riffSize: %d", _sizeOfRIFF);
-    NSLog(@"riffType: %s", _riffTypeTag);
-    NSLog(@"fmtChunkTAg : %s", _fmtChunkTag);
+    NSLog(@"riffType: %c%c%c%c", _riffTypeTag[0], _riffTypeTag[1], _riffTypeTag[2], _riffTypeTag[3]);
+    NSLog(@"fmtChunkTag : %c%c%c%c", _fmtChunkTag[0], _fmtChunkTag[1], _fileTypeTag[2], ' ');
     NSLog(@"fmtSize: %d", _sizeOfFMT);
-    NSLog(@"formatID: %d", _formatID);
+    NSLog(@"formatTag: %d", _formatTag);
 	NSLog(@"channel: %d", _numberOfChannels);
 	NSLog(@"samplesPerSec: %d", _samplesPerSec);
 	NSLog(@"bytesPerSec: %d", _bytesPerSec);
 	NSLog(@"blockSize: %d", _sizeOfBlock);
 	NSLog(@"bitsPerSample: %d", _bitsPerSample);
-    NSLog(@"dataChunkTag : %s", _dataChunkTag);
+    NSLog(@"dataChunkTag : %c%c%c%c", _dataChunkTag[0], _dataChunkTag[1], _dataChunkTag[2], _dataChunkTag[3]);
 	NSLog(@"dataSize: %d", _sizeOfData);
 	NSLog(@"offset: %d", _offset);
 	NSLog(@"numberOfSamples: %d", _numberOfSamples);
@@ -600,16 +653,29 @@
 
 #pragma mark - sample calculation methods
 
-- (void)normalize {
+- (void)internalize {
+    //check
+    double max = 0.0;
+    unsigned int start = (unsigned int)(_numberOfSamples / 4);
+    unsigned int end   = (unsigned int)(_numberOfSamples / 3);
+    for (int i=start; i<end; i++) {
+        if (max < fabs(_data[i])) {
+            max = fabs(_data[i]);
+        }
+    }
+    if (max <= 1.0) {
+        return;
+    }
+    
     if (MONORAL) {
         for (int i=0; i<_numberOfSamples; i++) {
-            _data[i] /= self.bufAbsLimit;
+            _data[i] /= _bufAbsLimit;
         }
     }
     else if (STEREO) {
         for (int i=0; i<_numberOfSamples; i++) {
-            _data[i] /= self.bufAbsLimit;
-            _dataR[i] /= self.bufAbsLimit;
+            _data[i]  /= _bufAbsLimit;
+            _dataR[i] /= _bufAbsLimit;
         }
     }
 }
@@ -632,22 +698,19 @@
                 }
             }
         }
-        if (!max) {
-            printf("[ERROR]: max == 0\n");
+        if (max == 0.0) {
+            printf("[ERROR]: max == 0.0\n");
             return;
         }
 
-        // normalize
+        // normalize with gain
         for (int i=0; i<_numberOfSamples; i++) {
             _data[i] *= (gain / max);
             if (STEREO) {
-                _data[i] *= (gain / max);
+                _data[i]  *= (gain / max);
                 _dataR[i] *= (gain / max);
             }
         }
-    }
-    else if (gain == -1) {
-        [self normalize];
     }
     else {
         printf("[ERROR]: gain is must be <0.0 ~ 1.0> or -1\n");
@@ -679,23 +742,24 @@
     }
 
     // rewrite header
-    unsigned int increasedByte = numOfSamples * self.bytesPerSample * _numberOfChannels;
+    unsigned int increasedBytes = numOfSamples * _bytesPerSample * _numberOfChannels;
     _numberOfSamples += numOfSamples;
-    _sizeOfData += increasedByte;
-    _sizeOfRIFF += increasedByte;
+    _sizeOfData += increasedBytes;
+    _sizeOfRIFF += increasedBytes;
 }
 
 // STEREO to MONORAL
 - (void)monolize {
 
     if (STEREO) {
+        double average = 0.0;
         for (int i=0; i<_numberOfSamples; i++) {
-            double average = (_data[i] + _dataR[i]) / 2.0;
+            average = (_data[i] + _dataR[i]) / 2.0;
             _data[i] = average;
         }
         // rewrite header
         _numberOfChannels = 1;
-        _sizeOfBlock = self.bytesPerSample * _numberOfChannels;
+        _sizeOfBlock = _bytesPerSample * _numberOfChannels;
         _bytesPerSec = _sizeOfBlock * _samplesPerSec;
         _sizeOfData /= 2;
         _sizeOfRIFF -= _sizeOfData;
@@ -711,7 +775,6 @@
 // add to DataHead silent samples
 - (void)unshiftSilentSamples:(unsigned int)numOfSamples {
 
-    double tmp;
     // validation for overflow
     if (_numberOfSamples - numOfSamples <= 0) {
         printf("[ERROR]: Too many.\n");
@@ -720,6 +783,7 @@
     [self changeNumberOfSamples:numOfSamples];
 
     unsigned int originLength =  _numberOfSamples - numOfSamples;
+    double tmp;
     if (MONORAL) {
         for (int i=0; i<originLength; i++) {
             tmp = _data[originLength - i - 1];
@@ -739,7 +803,7 @@
             _dataR[_numberOfSamples - i - 1] = tmp;
         }
         for (int i=0; i<numOfSamples; i++) {
-            _data[i] = 0.0;
+            _data[i]  = 0.0;
             _dataR[i] = 0.0;
         }
     }
@@ -754,7 +818,7 @@
     }
     else if (STEREO) {
         for (int i=0; i<_numberOfSamples; i++) {
-            _data[i] = 0.0;
+            _data[i]  = 0.0;
             _dataR[i] = 0.0;
         }
     }
