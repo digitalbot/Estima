@@ -112,7 +112,6 @@
         SampleTime newEnd;
 
         newEnd = (newStart < self.endTime) ? self.endTime : newStart;
-
         [self setTimeBoundsInStartTime:newStart endTime:newEnd];
     }
 
@@ -256,7 +255,7 @@
 
 - (void)setTimeBoundsInStartTime:(SampleTime)startTime endTime:(SampleTime)endTime {
     unsigned int nextPtr = _timeBoundsQueuePtr + 1;
-    unsigned int index   = nextPtr & kTimeBoundsQueueMask;
+    unsigned int index   = nextPtr & (kTimeBoundsQueueMask);
 
     _timeBoundsQueue[index].mStartTime     = startTime;
     _timeBoundsQueue[index].mEndTime       = endTime;

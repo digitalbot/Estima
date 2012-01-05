@@ -18,7 +18,7 @@
 #define kSamplePer   kInputDataSampleRate
 #define kLimitTime   ((kMicDist) / (kSonic))
 #define kPerSample   (1.0 / ( kSamplePer))
-#define kLimitSample ((int)((kLimitTime / (kSamplePer * pow(2, kPowerNumberOfTwo))) + 1.0))
+#define kLimitSample ((int)((kLimitTime / (1 / (kSamplePer * pow(2, kPowerNumberOfTwo))) + 1.0)))
 #define kOffset      (500)
 #define kRange       (8000 + kOffset)
 
@@ -78,7 +78,7 @@ typedef struct {
                 subData:(double *)subData
                  result:(sCCFResult *)result;
 
-- (sAnswers)estimate;
+- (void)estimate:(sAnswers *)ans;
 
 - (void)dumpCCFResult:(sCCFResult *)result withName:(NSString *)name;
 

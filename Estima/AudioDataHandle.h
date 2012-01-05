@@ -16,7 +16,7 @@
     returnDatas = MEM_CALLOC(num, sizeof(type **));   \
     type **temp = (type **)returnDatas;               \
     temp[0] = (type *)firstData;                      \
-    for (int i=1; i<num; i++) {                     \
+    for (int i=1; i<num; i++) {                       \
         temp[i] = va_arg(argList, type *);            \
     }
 #define SET_DATA(type)                                         \

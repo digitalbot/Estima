@@ -103,6 +103,7 @@
     // OK
     //[audioDatas dumpDatas];
     [audioDatas dumpInfo:@"test"];
+    free(temp);
 
     [self calcCCFWithData:[audioDatas dataWithChannel:0]
                   subData:[audioDatas dataWithChannel:1]
@@ -127,11 +128,12 @@
 
 
     // TODO: estimate
-    sAnswers answers;// = [self estimate];
+    sAnswers answers;
+    //[self estimate:&answers];
     answers.x = 100.0;
     answers.y = 150.0;
     answers.z = 100.0;
-    // TODO:
+
     dispatch_async(_inputQueue, ^{
         [_delegate didCalculated:self withAnswers:answers];
     });
@@ -203,15 +205,25 @@
 
     double *resultArray = MEM_CALLOC(kLimitSample * 2, sizeof(double *));
 
+    double limS = kLimitSample;
+    double limT = kLimitTime;
+    NSLog(@"kLimitSample: %f | kLimitTime: %f", limS, limT);
     for (int i=kOffset; i<kLimitSample*2+kOffset; i++) {
+        double tempBase = 0;
+        double tempSub  = 0;
         for (int j=kLimitSample+kOffset; j<kRange; j++) {
             resultArray[i-kOffset] += baseData[i+j-kLimitSample-kOffset] * subData[j];
-            // TODO: diviation
+            tempBase += pow(baseData[i+j-kLimitSample-kOffset], 2);
+            tempSub  += pow(baseData[j], 2);
         }
+        resultArray[i-kOffset] /= sqrt(tempBase * tempSub);
+        
         if (result->max < resultArray[i-kOffset]) {
             result->max = resultArray[i-kOffset];
             result->indexOfMax = i - kOffset;
         }
+        
+        //NSLog(@"%d->test: %f", i-kOffset, resultArray[i-kOffset]);
     }
 
     if (result->indexOfMax < kLimitSample - 1) {
@@ -220,7 +232,7 @@
         result->arrivalTimeLag   = (double)result->arrivalSampleLag
                                    * (1 / (kSamplePer * pow(2, kPowerNumberOfTwo)));
     }
-    else if (result->indexOfMax == (kLimitSample - 1 || kLimitSample)) {
+    else if (result->indexOfMax == kLimitSample) {
         result->arrivalStatus    = kIsSame;
         result->arrivalSampleLag = 0;
         result->arrivalTimeLag   = 0.0;
@@ -235,8 +247,7 @@
     free(resultArray);
 }
 
-- (sAnswers)estimate {
-    sAnswers ans;
+- (void)estimate:(sAnswers *)ans {
     double drA = kSonic * _resultOtoA.arrivalTimeLag;
     double drB = kSonic * _resultOtoB.arrivalTimeLag;
     double drC = kSonic * _resultOtoC.arrivalTimeLag;
@@ -247,11 +258,20 @@
     double p2_dist = pow(kMicDist, 2);
     
     /* put BIG A, B, C to tmpOne, tmpTwo, tmpThree */
-    double tmpOne   = 4 * (+ (3 * (p2_drA + p2_drB + p2_drC))
-                           + (- 2 * ((drA * drB) + (drA * drC) + (drB * drC) + p2_dist))
+    double tmpOne   = 4 * (+ (3 * (+ p2_drA
+                                   + p2_drB
+                                   + p2_drC)
+                              )
+                           - 2 * (+ (drA * drB)
+                                  + (drA * drC)
+                                  + (drB * drC)
+                                  + p2_dist)
                            );
 
-    double tmpTwo   = 4 * (+ (- 3 * (pow(drA, 3) + pow(drB, 3) + pow(drC, 3)))
+    double tmpTwo   = 4 * (- 3 * (+ pow(drA, 3)
+                                  + pow(drB, 3)
+                                  + pow(drC, 3)
+                                  )
                            + (p2_drA * (drB + drC))
                            + (p2_drB * (drA + drC))
                            + (p2_drC * (drA + drB))
@@ -264,11 +284,11 @@
                                    + pow(drC, 4)
                                    )
                               )
-                           + ((- 2 * p2_dist) * (p2_drA + p2_drB + p2_drC))
-                           + (-2 * (+ (p2_drA * p2_drB)
-                                    + (p2_drC * (p2_drA + p2_drB))
-                                    )
-                              )
+                           - ((2 * p2_dist) * (p2_drA + p2_drB + p2_drC))
+                           - 2 * (+ (p2_drA * p2_drB)
+                                  + (p2_drC * (p2_drA + p2_drB)
+                                     )
+                                  )
                            );
     
     double rO;
@@ -278,7 +298,7 @@
     else {
         rO = - 1 * (tmpTwo / (2 * tmpOne))
              + (sqrt(pow(tmpTwo, 2)
-                     + (- 4 * tmpOne * tmpTwo)
+                     - (4 * tmpOne * tmpTwo)
                      )
                 / abs(2 * tmpOne));
     }
@@ -291,24 +311,22 @@
     double p2_rB = pow(rB, 2);
     double p2_rC = pow(rC, 2);
     
-    ans.x = (p2_rA - p2_dist - p2_rO) / (2 * kMicDist);
-    ans.y = (+ (2 * p2_rB)
+    ans->x = (p2_rA - p2_dist - p2_rO) / (2 * kMicDist);
+    ans->y = (+ (2 * p2_rB)
              - p2_dist
              - p2_rO
              - p2_rA
              ) / (2 * sqrt(3) * kMicDist);
-    ans.z = (+ (3 * p2_rC)
+    ans->z = (+ (3 * p2_rC)
              - p2_dist
              - p2_rO
              - p2_rA
              - p2_rB
              ) / (2 * sqrt(6) * kMicDist);
     
-    NSLog(@"[RESULT]: X=%.10f", ans.x);
-    NSLog(@"[RESULT]: Y=%.10f", ans.y);
-    NSLog(@"[RESULT]: Z=%.10f", ans.z);
-    
-    return ans;
+    NSLog(@"[RESULT]: X=%.10f", ans->x);
+    NSLog(@"[RESULT]: Y=%.10f", ans->y);
+    NSLog(@"[RESULT]: Z=%.10f", ans->z);
 }
 
 

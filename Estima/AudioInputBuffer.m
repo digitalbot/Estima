@@ -118,7 +118,7 @@
         err = [_ringBuffer fetchFromBuffer:bufferList
                               inSampleTime:_firstInputTime
                                numOfFrames:requireBufferSizeFrames];
-        _firstInputTime += requireBufferSizeFrames;
+        _firstInputTime = - 1;//+= requireBufferSizeFrames;
         
         if (err) {
             NSLog(@"[ERROR]: fetch error.");
