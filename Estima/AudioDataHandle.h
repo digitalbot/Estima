@@ -144,7 +144,7 @@ typedef struct {
 
 @interface AudioDataHandle (WavFileIO)
 - (void)defineIsWav;
-- (id)initWithFile:(NSString *)fFilePath;
+- (id)initWithWavFile:(NSString *)fFilePath;
 - (void)writeToWavFile:(NSString *)tFilePath;
 - (void)dumpHeader;
 @end

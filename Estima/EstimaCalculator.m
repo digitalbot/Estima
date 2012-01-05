@@ -15,7 +15,7 @@
 
 @dynamic baseNumberOfSamples;
 - (unsigned int)baseNumberOfSamples {
-    return NextPowerOfTwo(kRange);
+    return NextPowerOfTwo((double)kRange);
 }
 @dynamic responseNumberOfSamples;
 - (unsigned int)responseNumberOfSamples {
@@ -28,7 +28,7 @@
 - (id)init {
     self = [super init];
     if (self) {
-        // TODO:
+
         _interpolatedDataO = MEM_CALLOC(self.responseNumberOfSamples, sizeof(float));
         _interpolatedDataA = MEM_CALLOC(self.responseNumberOfSamples, sizeof(float));
         _interpolatedDataB = MEM_CALLOC(self.responseNumberOfSamples, sizeof(float));
@@ -55,6 +55,43 @@
 
     if (_isCalculating == YES) {
         NSLog(@"BUFFER DID FILLED. START CALUCULATE!");
+        // debug
+        /*
+        AudioDataHandle *baseData
+        = [[AudioDataHandle alloc] initWithWavFile:@"/Users/kosuke/Downloads/1013_cross_base_mono.wav"];
+         AudioDataHandle *subData
+        = [[AudioDataHandle alloc] initWithWavFile:@"/Users/kosuke/Downloads/1013_cross_sub_mono.wav"];
+        sCCFResult ccfresult;
+        ccfresult.max = 0;
+        double *upedBase = MEM_CALLOC(self.responseNumberOfSamples , sizeof(double));
+        double *upedSub = MEM_CALLOC(self.responseNumberOfSamples , sizeof(double));
+        float *toUpBaseTmp = MEM_CALLOC(self.responseNumberOfSamples, sizeof(float));
+        float *toUpSubTmp = MEM_CALLOC(self.responseNumberOfSamples, sizeof(float));
+        float *updB = MEM_CALLOC(self.responseNumberOfSamples, sizeof(float));
+        float *updS = MEM_CALLOC(self.responseNumberOfSamples, sizeof(float));
+        for (int i=0; i<self.responseNumberOfSamples; i++) {
+            toUpBaseTmp[i] = (float)[baseData access:0 atIndex:i];
+            toUpSubTmp[i]  = (float)[subData access:0 atIndex:i];
+        }
+        [self interpolateWithData:toUpBaseTmp responseData:updB];
+        [self interpolateWithData:toUpSubTmp responseData:updS];
+        for (int i=0; i<self.responseNumberOfSamples; i++) {
+            upedBase[i] = (double)updB[i];
+            upedSub[i] = (double)updS[i];
+        }
+
+        [self calcCCFWithData:upedBase subData:upedSub result:&ccfresult];
+        [self dumpCCFResult:&ccfresult withName:@"test"];
+        
+        free(upedBase);
+        free(upedSub);
+        free(toUpBaseTmp);
+        free(toUpSubTmp);
+        free(updB);
+        free(updS);
+        return;
+         */
+        //
         [self calculateWithABL:bufferList numOfFrames:numOfFrames];
     }
     else {
@@ -126,15 +163,15 @@
     //    return;
     //}
 
-
-    // TODO: estimate
-    sAnswers answers;
-    //[self estimate:&answers];
-    answers.x = 100.0;
-    answers.y = 150.0;
-    answers.z = 100.0;
-
     dispatch_async(_inputQueue, ^{
+        
+        // TODO: estimate
+        sAnswers answers;
+        //[self estimate:&answers];
+        answers.x = 100.0;
+        answers.y = 150.0;
+        answers.z = 100.0;
+        
         [_delegate didCalculated:self withAnswers:answers];
     });
 }
@@ -143,16 +180,23 @@
 #pragma mark - interpolate(upSampling)
 
 - (void)interpolateWithData:(float *)baseData
-              responseData:(float *)resData {
+               responseData:(float *)resData {
 
     /* get base and response number of samples */
     unsigned int baseNumOfSamples = self.baseNumberOfSamples;
     unsigned int resNumOfSamples  = self.responseNumberOfSamples;
+    
+    if (baseNumOfSamples == resNumOfSamples) {
+        for (int i=0; i<baseNumOfSamples; i++) {
+            resData[i] = baseData[i];
+        }
+        return;
+    }
 
     /* get 2^x */
     int baseLog2n = log2(baseNumOfSamples);
     int resLog2n  = log2(resNumOfSamples);
-
+    
     /* setup base FFT */
     FFTSetup fftSetup = vDSP_create_fftsetup(baseLog2n, FFT_RADIX2);
     DSPSplitComplex baseComplex;
@@ -162,7 +206,6 @@
         baseComplex.realp[i] = baseData[i];
         baseComplex.imagp[i] = 0.0;
     }
-
     /* do FFT */
     vDSP_fft_zip(fftSetup, &baseComplex, 1, (vDSP_Length)baseLog2n, FFT_FORWARD);
 
@@ -179,13 +222,13 @@
         resComplex.realp[i] = baseComplex.realp[i-resNumOfSamples+baseNumOfSamples];
         resComplex.imagp[i] = baseComplex.imagp[i-resNumOfSamples+baseNumOfSamples];
     }
-
+    
     /* do IFFT */
     vDSP_fft_zip(fftResSetup, &resComplex, 1, (vDSP_Length)resLog2n, FFT_INVERSE);
 
     /* set result */
     for (int i=0; i<resNumOfSamples; i++) {
-        resData[i] = resComplex.realp[i] / pow(2, resLog2n);
+        resData[i] = resComplex.realp[i] / pow(2, baseLog2n);
     }
 
     vDSP_destroy_fftsetup(fftSetup);
@@ -194,6 +237,7 @@
     free(baseComplex.imagp);
     free(resComplex.realp);
     free(resComplex.imagp);
+    return;
 }
 
 
@@ -203,11 +247,8 @@
                 subData:(double *)subData
                  result:(sCCFResult *)result {
 
-    double *resultArray = MEM_CALLOC(kLimitSample * 2, sizeof(double *));
-
-    double limS = kLimitSample;
-    double limT = kLimitTime;
-    NSLog(@"kLimitSample: %f | kLimitTime: %f", limS, limT);
+    double *resultArray = MEM_CALLOC(kLimitSample * 2, sizeof(double));
+    
     for (int i=kOffset; i<kLimitSample*2+kOffset; i++) {
         double tempBase = 0;
         double tempSub  = 0;
@@ -216,30 +257,29 @@
             tempBase += pow(baseData[i+j-kLimitSample-kOffset], 2);
             tempSub  += pow(baseData[j], 2);
         }
+        
         resultArray[i-kOffset] /= sqrt(tempBase * tempSub);
         
         if (result->max < resultArray[i-kOffset]) {
             result->max = resultArray[i-kOffset];
             result->indexOfMax = i - kOffset;
         }
-        
-        //NSLog(@"%d->test: %f", i-kOffset, resultArray[i-kOffset]);
     }
 
     if (result->indexOfMax < kLimitSample - 1) {
         result->arrivalStatus    = kIsAheadBase;
-        result->arrivalSampleLag = kLimitSample - result->indexOfMax;
+        result->arrivalSampleLag = kLimitSample -1 - result->indexOfMax;
         result->arrivalTimeLag   = (double)result->arrivalSampleLag
                                    * (1 / (kSamplePer * pow(2, kPowerNumberOfTwo)));
     }
-    else if (result->indexOfMax == kLimitSample) {
+    else if ((result->indexOfMax == kLimitSample) || (result->indexOfMax == kLimitSample - 1)) {
         result->arrivalStatus    = kIsSame;
         result->arrivalSampleLag = 0;
         result->arrivalTimeLag   = 0.0;
     }
     else {
         result->arrivalStatus    = kIsAheadSub;
-        result->arrivalSampleLag = - 1 * (result->indexOfMax - kLimitSample);
+        result->arrivalSampleLag = kLimitSample + 1 - result->indexOfMax;
         result->arrivalTimeLag   = (double)result->arrivalSampleLag
                                    * (1 / (kSamplePer * pow(2, kPowerNumberOfTwo)));
     }

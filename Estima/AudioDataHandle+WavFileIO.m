@@ -16,7 +16,7 @@
     _isData = NO;
 }
 
-- (id)initWithFile:(NSString *)fFilePath {
+- (id)initWithWavFile:(NSString *)fFilePath {
     self =  [super init];
     if (self) {
         FILE         *pWavFile;

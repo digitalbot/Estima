@@ -98,7 +98,7 @@
                      numOfFrames:(unsigned int)numOfFrames {
 
     double requireBufferSizeFrames;
-    OSStatus err = noErr;
+    __block OSStatus err = noErr;
 
     if (_firstInputTime == -1) {
         _firstInputTime = sampleTime;
@@ -111,21 +111,21 @@
     /* if filled */
     requireBufferSizeFrames = _audioUnitIO.recordFormat.mSampleRate * _bufferSizeTime;
     if ((sampleTime - _firstInputTime + numOfFrames) >= requireBufferSizeFrames) {
-        AudioBufferList *bufferList;
-        bufferList = createAudioBufferList(_audioUnitIO.recordFormat.mChannelsPerFrame,
-                                           requireBufferSizeFrames * _audioUnitIO.recordFormat.mBytesPerFrame);
-
-        err = [_ringBuffer fetchFromBuffer:bufferList
-                              inSampleTime:_firstInputTime
-                               numOfFrames:requireBufferSizeFrames];
-        _firstInputTime = - 1;//+= requireBufferSizeFrames;
-        
-        if (err) {
-            NSLog(@"[ERROR]: fetch error.");
-            return;
-        }
-    
         dispatch_async(_inputQueue, ^{
+            AudioBufferList *bufferList;
+            bufferList = createAudioBufferList(_audioUnitIO.recordFormat.mChannelsPerFrame,
+                                               requireBufferSizeFrames * _audioUnitIO.recordFormat.mBytesPerFrame);
+            
+            err = [_ringBuffer fetchFromBuffer:bufferList
+                                  inSampleTime:_firstInputTime
+                                   numOfFrames:requireBufferSizeFrames];
+            _firstInputTime /* = - 1;*/ += requireBufferSizeFrames;
+            
+            if (err) {
+                NSLog(@"[ERROR]: fetch error.");
+                return;
+            }
+            
             [_delegate inputBufferDidFilledBuffer:bufferList
                                       numOfFrames:requireBufferSizeFrames];
             removeAudioBufferList(bufferList);

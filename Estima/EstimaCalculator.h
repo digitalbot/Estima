@@ -12,15 +12,15 @@
 #import "AudioDataHandle.h"
 #import "Utils.h"
 
-#define kPowerNumberOfTwo 3 // 2の肩の数
+#define kPowerNumberOfTwo 3.0 // 2の肩の数
 #define kMicDist     50.0
 #define kSonic       340000.0
 #define kSamplePer   kInputDataSampleRate
 #define kLimitTime   ((kMicDist) / (kSonic))
 #define kPerSample   (1.0 / ( kSamplePer))
-#define kLimitSample ((int)((kLimitTime / (1 / (kSamplePer * pow(2, kPowerNumberOfTwo))) + 1.0)))
+#define kLimitSample ((int)((kLimitTime / (1.0 / (kSamplePer * pow(2.0, kPowerNumberOfTwo))) + 0.5)))
 #define kOffset      (500)
-#define kRange       (8000 + kOffset)
+#define kRange       (2000 + kOffset)
 
 typedef enum {
     kIsSame = 0,
