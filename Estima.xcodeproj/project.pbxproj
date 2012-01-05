@@ -7,6 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		212C47CA14B1DFC50025E180 /* AppController.m in Sources */ = {isa = PBXBuildFile; fileRef = 212C47C914B1DFC50025E180 /* AppController.m */; };
+		212C47CD14B1E8F40025E180 /* AudioInputBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 212C47CC14B1E8F40025E180 /* AudioInputBuffer.m */; };
+		212C47D014B1E97F0025E180 /* AudioUnitIO.m in Sources */ = {isa = PBXBuildFile; fileRef = 212C47CF14B1E97F0025E180 /* AudioUnitIO.m */; };
+		212C47D314B1EDBC0025E180 /* AudioDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 212C47D214B1EDBC0025E180 /* AudioDevice.m */; };
+		212C47D614B216AC0025E180 /* AudioDeviceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 212C47D514B216AC0025E180 /* AudioDeviceList.m */; };
+		212C47D914B229C60025E180 /* RingBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 212C47D814B229C50025E180 /* RingBuffer.m */; };
+		215DB31014B4183A0032FE2D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 215DB30F14B4183A0032FE2D /* OpenGL.framework */; };
+		215DB31314B418460032FE2D /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 215DB31214B418460032FE2D /* GLUT.framework */; };
+		215DB31914B41A630032FE2D /* ResultOpenGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 215DB31814B41A630032FE2D /* ResultOpenGLView.m */; };
+		2185CE8814B48FEF000B0633 /* EstimaCalculator.m in Sources */ = {isa = PBXBuildFile; fileRef = 2185CE8714B48FEE000B0633 /* EstimaCalculator.m */; };
+		2185CE9014B4A3B9000B0633 /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = 2185CE8F14B4A3B9000B0633 /* Utils.m */; };
+		2185CE9514B4B857000B0633 /* AudioDataHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 2185CE9314B4B857000B0633 /* AudioDataHandle.m */; };
+		2185CE9614B4B857000B0633 /* AudioDataHandle+WavFileIO.m in Sources */ = {isa = PBXBuildFile; fileRef = 2185CE9414B4B857000B0633 /* AudioDataHandle+WavFileIO.m */; };
 		21F0BC05148A9C7D0012C5C9 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21F0BC04148A9C7D0012C5C9 /* Cocoa.framework */; };
 		21F0BC0F148A9C7D0012C5C9 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 21F0BC0D148A9C7D0012C5C9 /* InfoPlist.strings */; };
 		21F0BC11148A9C7D0012C5C9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 21F0BC10148A9C7D0012C5C9 /* main.m */; };
@@ -18,10 +31,32 @@
 		21F0BC26148A9CB00012C5C9 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21F0BC25148A9CB00012C5C9 /* AudioUnit.framework */; };
 		21F0BC28148A9CB60012C5C9 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21F0BC27148A9CB60012C5C9 /* AVFoundation.framework */; };
 		21F0BC2A148A9CBB0012C5C9 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21F0BC29148A9CBB0012C5C9 /* CoreAudio.framework */; };
-		21F0BC2E148A9D160012C5C9 /* WaveFileHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 21F0BC2D148A9D160012C5C9 /* WaveFileHandle.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		212C47C814B1DFC50025E180 /* AppController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppController.h; sourceTree = "<group>"; };
+		212C47C914B1DFC50025E180 /* AppController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppController.m; sourceTree = "<group>"; };
+		212C47CB14B1E8F40025E180 /* AudioInputBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioInputBuffer.h; sourceTree = "<group>"; };
+		212C47CC14B1E8F40025E180 /* AudioInputBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioInputBuffer.m; sourceTree = "<group>"; };
+		212C47CE14B1E97F0025E180 /* AudioUnitIO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioUnitIO.h; sourceTree = "<group>"; };
+		212C47CF14B1E97F0025E180 /* AudioUnitIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioUnitIO.m; sourceTree = "<group>"; };
+		212C47D114B1EDBC0025E180 /* AudioDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioDevice.h; sourceTree = "<group>"; };
+		212C47D214B1EDBC0025E180 /* AudioDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioDevice.m; sourceTree = "<group>"; };
+		212C47D414B216AC0025E180 /* AudioDeviceList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioDeviceList.h; sourceTree = "<group>"; };
+		212C47D514B216AC0025E180 /* AudioDeviceList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioDeviceList.m; sourceTree = "<group>"; };
+		212C47D714B229C50025E180 /* RingBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RingBuffer.h; sourceTree = "<group>"; };
+		212C47D814B229C50025E180 /* RingBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RingBuffer.m; sourceTree = "<group>"; };
+		215DB30F14B4183A0032FE2D /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		215DB31214B418460032FE2D /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+		215DB31714B41A630032FE2D /* ResultOpenGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ResultOpenGLView.h; sourceTree = "<group>"; };
+		215DB31814B41A630032FE2D /* ResultOpenGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ResultOpenGLView.m; sourceTree = "<group>"; };
+		2185CE8614B48FEE000B0633 /* EstimaCalculator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EstimaCalculator.h; sourceTree = "<group>"; };
+		2185CE8714B48FEE000B0633 /* EstimaCalculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EstimaCalculator.m; sourceTree = "<group>"; };
+		2185CE8E14B4A3B8000B0633 /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
+		2185CE8F14B4A3B9000B0633 /* Utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Utils.m; sourceTree = "<group>"; };
+		2185CE9214B4B857000B0633 /* AudioDataHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioDataHandle.h; sourceTree = "<group>"; };
+		2185CE9314B4B857000B0633 /* AudioDataHandle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioDataHandle.m; sourceTree = "<group>"; };
+		2185CE9414B4B857000B0633 /* AudioDataHandle+WavFileIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "AudioDataHandle+WavFileIO.m"; sourceTree = "<group>"; };
 		21F0BC00148A9C7D0012C5C9 /* Estima.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Estima.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		21F0BC04148A9C7D0012C5C9 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		21F0BC07148A9C7D0012C5C9 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -40,8 +75,6 @@
 		21F0BC25148A9CB00012C5C9 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
 		21F0BC27148A9CB60012C5C9 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		21F0BC29148A9CBB0012C5C9 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
-		21F0BC2C148A9D160012C5C9 /* WaveFileHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WaveFileHandle.h; sourceTree = "<group>"; };
-		21F0BC2D148A9D160012C5C9 /* WaveFileHandle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WaveFileHandle.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +82,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				215DB31314B418460032FE2D /* GLUT.framework in Frameworks */,
+				215DB31014B4183A0032FE2D /* OpenGL.framework in Frameworks */,
 				21F0BC2A148A9CBB0012C5C9 /* CoreAudio.framework in Frameworks */,
 				21F0BC28148A9CB60012C5C9 /* AVFoundation.framework in Frameworks */,
 				21F0BC26148A9CB00012C5C9 /* AudioUnit.framework in Frameworks */,
@@ -61,6 +96,57 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		215DB31414B4187D0032FE2D /* RingBuffer */ = {
+			isa = PBXGroup;
+			children = (
+				212C47D714B229C50025E180 /* RingBuffer.h */,
+				212C47D814B229C50025E180 /* RingBuffer.m */,
+			);
+			name = RingBuffer;
+			sourceTree = "<group>";
+		};
+		215DB31514B4189F0032FE2D /* Device */ = {
+			isa = PBXGroup;
+			children = (
+				212C47D414B216AC0025E180 /* AudioDeviceList.h */,
+				212C47D514B216AC0025E180 /* AudioDeviceList.m */,
+				212C47D114B1EDBC0025E180 /* AudioDevice.h */,
+				212C47D214B1EDBC0025E180 /* AudioDevice.m */,
+			);
+			name = Device;
+			sourceTree = "<group>";
+		};
+		215DB31614B418DC0032FE2D /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				2185CE9214B4B857000B0633 /* AudioDataHandle.h */,
+				2185CE9314B4B857000B0633 /* AudioDataHandle.m */,
+				2185CE9414B4B857000B0633 /* AudioDataHandle+WavFileIO.m */,
+				2185CE9714B4B873000B0633 /* IO */,
+			);
+			name = Audio;
+			sourceTree = "<group>";
+		};
+		2185CE9114B4B7D3000B0633 /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				2185CE8E14B4A3B8000B0633 /* Utils.h */,
+				2185CE8F14B4A3B9000B0633 /* Utils.m */,
+			);
+			name = Utility;
+			sourceTree = "<group>";
+		};
+		2185CE9714B4B873000B0633 /* IO */ = {
+			isa = PBXGroup;
+			children = (
+				212C47CB14B1E8F40025E180 /* AudioInputBuffer.h */,
+				212C47CC14B1E8F40025E180 /* AudioInputBuffer.m */,
+				212C47CE14B1E97F0025E180 /* AudioUnitIO.h */,
+				212C47CF14B1E97F0025E180 /* AudioUnitIO.m */,
+			);
+			name = IO;
+			sourceTree = "<group>";
+		};
 		21F0BBF5148A9C7C0012C5C9 = {
 			isa = PBXGroup;
 			children = (
@@ -81,6 +167,8 @@
 		21F0BC03148A9C7D0012C5C9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				215DB31214B418460032FE2D /* GLUT.framework */,
+				215DB30F14B4183A0032FE2D /* OpenGL.framework */,
 				21F0BC29148A9CBB0012C5C9 /* CoreAudio.framework */,
 				21F0BC27148A9CB60012C5C9 /* AVFoundation.framework */,
 				21F0BC25148A9CB00012C5C9 /* AudioUnit.framework */,
@@ -105,11 +193,15 @@
 		21F0BC0A148A9C7D0012C5C9 /* Estima */ = {
 			isa = PBXGroup;
 			children = (
-				21F0BC2B148A9CE60012C5C9 /* App Main */,
 				21F0BC19148A9C7D0012C5C9 /* MainMenu.xib */,
+				215DB31714B41A630032FE2D /* ResultOpenGLView.h */,
+				215DB31814B41A630032FE2D /* ResultOpenGLView.m */,
+				21F0BC2B148A9CE60012C5C9 /* App Main */,
+				215DB31614B418DC0032FE2D /* Audio */,
+				215DB31414B4187D0032FE2D /* RingBuffer */,
+				215DB31514B4189F0032FE2D /* Device */,
+				2185CE9114B4B7D3000B0633 /* Utility */,
 				21F0BC0B148A9C7D0012C5C9 /* Supporting Files */,
-				21F0BC2C148A9D160012C5C9 /* WaveFileHandle.h */,
-				21F0BC2D148A9D160012C5C9 /* WaveFileHandle.m */,
 			);
 			path = Estima;
 			sourceTree = "<group>";
@@ -129,8 +221,12 @@
 		21F0BC2B148A9CE60012C5C9 /* App Main */ = {
 			isa = PBXGroup;
 			children = (
-				21F0BC17148A9C7D0012C5C9 /* AppDelegate.m */,
 				21F0BC16148A9C7D0012C5C9 /* AppDelegate.h */,
+				21F0BC17148A9C7D0012C5C9 /* AppDelegate.m */,
+				212C47C814B1DFC50025E180 /* AppController.h */,
+				212C47C914B1DFC50025E180 /* AppController.m */,
+				2185CE8614B48FEE000B0633 /* EstimaCalculator.h */,
+				2185CE8714B48FEE000B0633 /* EstimaCalculator.m */,
 			);
 			name = "App Main";
 			sourceTree = "<group>";
@@ -201,7 +297,17 @@
 			files = (
 				21F0BC11148A9C7D0012C5C9 /* main.m in Sources */,
 				21F0BC18148A9C7D0012C5C9 /* AppDelegate.m in Sources */,
-				21F0BC2E148A9D160012C5C9 /* WaveFileHandle.m in Sources */,
+				212C47CA14B1DFC50025E180 /* AppController.m in Sources */,
+				212C47CD14B1E8F40025E180 /* AudioInputBuffer.m in Sources */,
+				212C47D014B1E97F0025E180 /* AudioUnitIO.m in Sources */,
+				212C47D314B1EDBC0025E180 /* AudioDevice.m in Sources */,
+				212C47D614B216AC0025E180 /* AudioDeviceList.m in Sources */,
+				212C47D914B229C60025E180 /* RingBuffer.m in Sources */,
+				215DB31914B41A630032FE2D /* ResultOpenGLView.m in Sources */,
+				2185CE8814B48FEF000B0633 /* EstimaCalculator.m in Sources */,
+				2185CE9014B4A3B9000B0633 /* Utils.m in Sources */,
+				2185CE9514B4B857000B0633 /* AudioDataHandle.m in Sources */,
+				2185CE9614B4B857000B0633 /* AudioDataHandle+WavFileIO.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,6 +429,7 @@
 				21F0BC20148A9C7D0012C5C9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
