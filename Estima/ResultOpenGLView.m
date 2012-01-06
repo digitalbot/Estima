@@ -27,23 +27,32 @@
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
-    glClearColor(1.0f, 0.5f, 0.5f, 1.0f);
+    glClearColor(0.7, 0.87f, 0.96f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
     
-	// draw opengl
     
     // sound source position
     glPushMatrix();
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor4d(6.0, 0.0, 3.0, 1.0);
     glTranslated(_resultX, _resultY, _resultZ);
-    glutWireCube(5.0);
+    glutSolidSphere(5.0, 12, 12);
 	glPopMatrix();
+
+    glBegin(GL_LINES);
+    {
+        glColor4d(7.0, 0.0, 3.5, 1.0);
+        glVertex3d(0.0, 0.0, 0.0);
+        glVertex3d(_resultX, _resultY, _resultZ);
+    }
+    glEnd();
+
     
-    [self drawBorders:360.0];
+    [self drawBorders:420.0];
     [self drawMic:(50.0 / 2)];
     
     
-    NSLog(@"X(from OpenGL Class):%f\n", _resultX);
+    NSLog(@"DRAW DONE.");
+    NSLog(@" ");
 	[[self openGLContext] flushBuffer];
 }
 
@@ -57,9 +66,9 @@
 	glViewport(0, 0,
                (GLsizei)frame.size.width,
                (GLsizei)frame.size.height);
-    double ortho = 360.0;
+    double ortho = 420.0;
     glOrtho(-ortho, ortho, -ortho, ortho, -ortho, ortho);
-    gluLookAt(100.0, -100.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+    gluLookAt(-30.0, -65.0, 45.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
 }
 
 - (void)setResult:(double)ansX :(double)ansY :(double)ansZ {

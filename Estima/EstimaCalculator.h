@@ -20,7 +20,7 @@
 #define kUpedPerSample (1.0 / (kSamplePer * pow(2.0, kPowerNumberOfTwo)))
 #define kLimitSample   ((int)((kLimitTime / kUpedPerSample) + 1.0))
 #define kOffset        (500)
-#define kRange         (25000 + kOffset)
+#define kRange         (22000 + kOffset)
 
 typedef enum {
     kIsSame = 0,

@@ -19,6 +19,10 @@
     double _resultX;
     double _resultY;
     double _resultZ;
+    
+    double _previousX;
+    double _previousY;
+    double _previousZ;
 }
 
 - (void)prepareOpenGL;

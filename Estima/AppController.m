@@ -14,6 +14,9 @@
 @synthesize resultView    = _resultView;
 @synthesize startButton   = _startButton;
 @synthesize monitorButton = _monitorButton;
+@synthesize xLabel = _xLabel;
+@synthesize yLabel = _yLabel;
+@synthesize zLabel = _zLabel;
 
 #pragma mark - init
 
@@ -24,6 +27,7 @@
     
     [_audioInputBuf setDelegate:_calculator];
     [_calculator setDelegate:self];
+    _mainQueue = dispatch_get_main_queue();
 }
 
 #pragma mark - IBAction
@@ -69,6 +73,12 @@
 
     NSLog(@"did calculated!");
     [_resultView setResult:answers.x :answers.y :answers.z];
+    dispatch_async(_mainQueue, ^{
+        [_xLabel setStringValue:[NSString stringWithFormat:@"X: %f", answers.x]];
+        [_yLabel setStringValue:[NSString stringWithFormat:@"Y: %f", answers.y]];
+        [_zLabel setStringValue:[NSString stringWithFormat:@"Z: %f", answers.z]];
+    });
+    
     return;
 }
 
