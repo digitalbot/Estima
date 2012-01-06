@@ -40,7 +40,7 @@
 	glPopMatrix();
     
     [self drawBorders:360.0];
-    [self drawMic:50.0];
+    [self drawMic:(50.0 / 2)];
     
     
     NSLog(@"X(from OpenGL Class):%f\n", _resultX);
@@ -63,9 +63,9 @@
 }
 
 - (void)setResult:(double)ansX :(double)ansY :(double)ansZ {
-    _resultX = ansX;
-    _resultY = ansY;
-    _resultZ = ansZ;
+    _resultX = ansX / 2;
+    _resultY = ansY / 2;
+    _resultZ = ansZ / 2;
     [self setNeedsDisplay:YES];
 }
 

@@ -22,8 +22,12 @@
 
     float  _bufferSizeTime;
     double _firstInputTime;
-
+    
     dispatch_queue_t _inputQueue;
+    
+    float **_buffers;
+    unsigned int _numberOfFrames;
+
 }
 
 @property(weak) id<AudioInputBufferDelegate> delegate;

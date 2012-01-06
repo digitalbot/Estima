@@ -34,7 +34,11 @@
         _interpolatedDataB = MEM_CALLOC(self.responseNumberOfSamples, sizeof(float));
         _interpolatedDataC = MEM_CALLOC(self.responseNumberOfSamples, sizeof(float));
 
-        _inputQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        _inputQueue = dispatch_queue_create("EstimaCalculator", NULL);//dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        
+        _resultOtoA.max = 0;
+        _resultOtoB.max = 0;
+        _resultOtoC.max = 0;
         NSLog(@"EstimaCalculator init DONE.");
     }
     return self;
@@ -45,6 +49,7 @@
     free(_interpolatedDataA);
     free(_interpolatedDataB);
     free(_interpolatedDataC);
+    dispatch_release(_inputQueue);
 }
 
 
@@ -54,7 +59,9 @@
                        numOfFrames:(unsigned int)numOfFrames {
 
     if (_isCalculating == YES) {
-        NSLog(@"BUFFER DID FILLED. START CALUCULATE!");
+        _count++;
+        NSLog(@" ");
+        NSLog(@"<%d>BUFFER DID FILLED. START CALUCULATE!", _count);
         // debug
         /*
         AudioDataHandle *baseData
@@ -107,24 +114,36 @@
 
     float *dataO = (float *)bufferList->mBuffers[0].mData;
     float *dataA = (float *)bufferList->mBuffers[1].mData;
-    //float *dataB = (float *)bufferList->mBuffers[2].mData;
-    //float *dataC = (float *)bufferList->mBuffers[3].mData;
+    float *dataB = (float *)bufferList->mBuffers[2].mData;
+    float *dataC = (float *)bufferList->mBuffers[3].mData;
 
     /* debug
     for (int i=0; i<50; i++) {
-        printf("mData[0]: %.10f | mData[1]: %.10e\n", dataO[i], dataA[i]);
+        printf(">ch: %.10f >1ch: %.10f >2ch: %.10f >3ch: %.10f\n", dataO[i], dataA[i], dataB[i], dataC[i]);
     }
      */
     [self interpolateWithData:dataO responseData:_interpolatedDataO];
     [self interpolateWithData:dataA responseData:_interpolatedDataA];
+    [self interpolateWithData:dataB responseData:_interpolatedDataB];
+    [self interpolateWithData:dataC responseData:_interpolatedDataC];
 
+    /*
+    char path[100];
+    sprintf(path, "/Users/kosuke/Desktop/EstimaDebug/upedO_%d.txt", _count);
+        FILE *fp = fopen(path, "w");
+    for (int i=0; i<self.responseNumberOfSamples; i++) {
+            fprintf(fp, "%d %10f\n", i, _interpolatedDataO[i]);
+        }
+    fclose(fp);
+     */
+    
     unsigned int sampleRate = kInputDataSampleRate * pow(2.0, kPowerNumberOfTwo);
     unsigned int numOfSamples = self.responseNumberOfSamples;
 
     void **temp = [AudioDataHandle prepareInitWithDatas:kIsFloat
-                                          numOfChannels:2//4
+                                          numOfChannels:/*2*/4
                                               firstData:_interpolatedDataO,
-                   _interpolatedDataA/*, _interpolatedDataB, _interpolatedDataC*/];
+                   _interpolatedDataA, _interpolatedDataB, _interpolatedDataC];
     /* debug
     NSLog(@"temp");
     for (int i=0; i<50; i++) {
@@ -134,43 +153,72 @@
     AudioDataHandle *audioDatas
     = [[AudioDataHandle alloc] initWithDatas:temp
                                 numOfSamples:numOfSamples
-                               numOfChannels:2//4
+                               numOfChannels:/*2*/4
                                samplesPerSec:sampleRate
                                     dataType:kIsFloat];
     // OK
     //[audioDatas dumpDatas];
-    [audioDatas dumpInfo:@"test"];
+    //[audioDatas dumpInfo:@"test"];
     free(temp);
-
+    /*
+    char hoge[100];
+    char foo[100];
+    char bar[100];
+    char baz[100];
+    sprintf(hoge, "/Users/kosuke/Desktop/EstimaDebug/handlledO_%d.txt", _count);
+    sprintf(foo, "/Users/kosuke/Desktop/EstimaDebug/handlledA_%d.txt", _count);
+    sprintf(bar, "/Users/kosuke/Desktop/EstimaDebug/handlledB_%d.txt", _count);
+    sprintf(baz, "/Users/kosuke/Desktop/EstimaDebug/handlledC_%d.txt", _count);
+    FILE *zero = fopen(hoge, "w");
+    FILE *one = fopen(foo, "w");
+    FILE *two = fopen(bar, "w");
+    FILE *three = fopen(baz, "w");
+    for (int i=kOffset; i<kRange; i++) {
+        fprintf(zero, "%d %f\n", i, [audioDatas access:0 atIndex:i]);
+        fprintf(one, "%d %f\n", i, [audioDatas access:1 atIndex:i]);
+        fprintf(two, "%d %f\n", i, [audioDatas access:2 atIndex:i]);
+        fprintf(three, "%d %f\n", i, [audioDatas access:3 atIndex:i]);
+    }
+    fclose(zero);
+    fclose(one);
+    fclose(two);
+    fclose(three);
+    */
+    [self calcCCFWithData:[audioDatas dataWithChannel:0]
+                  subData:[audioDatas dataWithChannel:0]
+                   result:&_resultOtoA
+                     name:@"OtoO"];
     [self calcCCFWithData:[audioDatas dataWithChannel:0]
                   subData:[audioDatas dataWithChannel:1]
-                   result:&_resultOtoA];
-    //[self calcCCFWithData:[audioDatas dataWithChannel:0]
-    //              subData:[audioDatas dataWithChannel:2]
-    //               result:&_resultOtoB];
-    //[self calcCCFWithData:[audioDatas dataWithChannel:0]
-    //              subData:[audioDatas dataWithChannel:3]
-    //               result:&_resultOtoC];
+                   result:&_resultOtoA
+                     name:@"OtoA"];
+    [self calcCCFWithData:[audioDatas dataWithChannel:0]
+                  subData:[audioDatas dataWithChannel:2]
+                   result:&_resultOtoB
+                     name:@"OtoB"];
+    [self calcCCFWithData:[audioDatas dataWithChannel:0]
+                  subData:[audioDatas dataWithChannel:3]
+                   result:&_resultOtoC
+                     name:@"OtoC"];
     [self dumpCCFResult:&_resultOtoA withName:@"OtoA"];
-    //[self dumpCCFResult:&_resultOtoB withName:@"OtoB"];
-    //[self dumpCCFResult:&_resultOtoC withName:@"OtoC"];
+    [self dumpCCFResult:&_resultOtoB withName:@"OtoB"];
+    [self dumpCCFResult:&_resultOtoC withName:@"OtoC"];
 
     /* check ccf error */
-    //if ((resulfOtoA.arrivalStatus
-    //     + resultOtoB.arrivalStatus
-    //     + resultOtoC.arrivalStatus) < 2) {
-    //    NSLog(@"[ERROR]: CalcCCF error.");
-    //    return;
-    //}
+    if ((_resultOtoA.arrivalStatus
+         + _resultOtoB.arrivalStatus
+         + _resultOtoC.arrivalStatus) < 2) {
+        NSLog(@"[ERROR]: CalcCCF error.");
+        return;
+    }
 
     dispatch_async(_inputQueue, ^{
         
-        // TODO: estimate
         sAnswers answers;
-        //[self estimate:&answers];
-        answers.x = 100.0;
-        answers.y = 150.0;
-        answers.z = 100.0;
+        [self estimate:&answers];
+        //answers.x = 100.0;
+        //answers.y = 150.0;
+        //answers.z = 100.0;
         
         [_delegate didCalculated:self withAnswers:answers];
     });
@@ -188,7 +236,7 @@
     
     if (baseNumOfSamples == resNumOfSamples) {
         for (int i=0; i<baseNumOfSamples; i++) {
-            resData[i] = baseData[i];
+            resData[i] = ((fabs(baseData[i]) - 0.0005) < 0) ? 0 : baseData[i]; //comp
         }
         return;
     }
@@ -228,7 +276,8 @@
 
     /* set result */
     for (int i=0; i<resNumOfSamples; i++) {
-        resData[i] = resComplex.realp[i] / pow(2, baseLog2n);
+        double tmp = resComplex.realp[i] / pow(2, baseLog2n);
+        resData[i] = ((fabs(tmp) - 0.0005) < 0) ? 0 : tmp;
     }
 
     vDSP_destroy_fftsetup(fftSetup);
@@ -245,13 +294,18 @@
 
 - (void)calcCCFWithData:(double *)baseData
                 subData:(double *)subData
-                 result:(sCCFResult *)result {
+                 result:(sCCFResult *)result
+                   name:(NSString *)name {
 
+    result->max = 0;
     double *resultArray = MEM_CALLOC(kLimitSample * 2, sizeof(double));
-    
+    //const char *cName = [name UTF8String];
+    //char path[100];
+    //sprintf(path, "/Users/kosuke/Desktop/EstimaDebug/ccf%s_%d.txt", cName, _count);
+    //FILE *fp = fopen(path, "w");
     for (int i=kOffset; i<kLimitSample*2+kOffset; i++) {
-        double tempBase = 0;
-        double tempSub  = 0;
+        double tempBase = 0.0;
+        double tempSub  = 0.0;
         for (int j=kLimitSample+kOffset; j<kRange; j++) {
             resultArray[i-kOffset] += baseData[i+j-kLimitSample-kOffset] * subData[j];
             tempBase += pow(baseData[i+j-kLimitSample-kOffset], 2);
@@ -259,18 +313,17 @@
         }
         
         resultArray[i-kOffset] /= sqrt(tempBase * tempSub);
-        
+        //fprintf(fp, "%d %f\n", i - kOffset, resultArray[i-kOffset]);
         if (result->max < resultArray[i-kOffset]) {
             result->max = resultArray[i-kOffset];
             result->indexOfMax = i - kOffset;
         }
     }
-
+    //fclose(fp);
     if (result->indexOfMax < kLimitSample - 1) {
         result->arrivalStatus    = kIsAheadBase;
-        result->arrivalSampleLag = kLimitSample -1 - result->indexOfMax;
-        result->arrivalTimeLag   = (double)result->arrivalSampleLag
-                                   * (1 / (kSamplePer * pow(2, kPowerNumberOfTwo)));
+        result->arrivalSampleLag = - (kLimitSample -1 - result->indexOfMax);
+        result->arrivalTimeLag   = (double)result->arrivalSampleLag * kUpedPerSample;
     }
     else if ((result->indexOfMax == kLimitSample) || (result->indexOfMax == kLimitSample - 1)) {
         result->arrivalStatus    = kIsSame;
@@ -279,9 +332,8 @@
     }
     else {
         result->arrivalStatus    = kIsAheadSub;
-        result->arrivalSampleLag = kLimitSample + 1 - result->indexOfMax;
-        result->arrivalTimeLag   = (double)result->arrivalSampleLag
-                                   * (1 / (kSamplePer * pow(2, kPowerNumberOfTwo)));
+        result->arrivalSampleLag = - (kLimitSample + 1 - result->indexOfMax);
+        result->arrivalTimeLag   = (double)result->arrivalSampleLag * kUpedPerSample;
     }
 
     free(resultArray);
@@ -338,7 +390,7 @@
     else {
         rO = - 1 * (tmpTwo / (2 * tmpOne))
              + (sqrt(pow(tmpTwo, 2)
-                     - (4 * tmpOne * tmpTwo)
+                     - (4 * tmpOne * tmpThree)
                      )
                 / abs(2 * tmpOne));
     }
@@ -364,30 +416,30 @@
              - p2_rB
              ) / (2 * sqrt(6) * kMicDist);
     
-    NSLog(@"[RESULT]: X=%.10f", ans->x);
-    NSLog(@"[RESULT]: Y=%.10f", ans->y);
-    NSLog(@"[RESULT]: Z=%.10f", ans->z);
+    NSLog(@"%d[RESULT]: X=%.10f", _count, ans->x);
+    NSLog(@"%d[RESULT]: Y=%.10f", _count, ans->y);
+    NSLog(@"%d[RESULT]: Z=%.10f", _count, ans->z);
 }
 
 
 #pragma mark - dump methods
 
 - (void)dumpCCFResult:(sCCFResult *)result withName:(NSString *)name {
-    NSLog(@"-------- DUMP %@ START --------", name);
-    NSLog(@"indexOfMax: %d", result->indexOfMax);
-    NSLog(@"max       : %f", result->max);
+    NSLog(@"-------- DUMP %@ START (%d) --------", name, _count);
+    NSLog(@"<%@%d>indexOfMax: %d", name, _count, result->indexOfMax);
+    NSLog(@"<%@%d>max       : %f", name, _count, result->max);
     if (result->arrivalStatus == kIsAheadSub) {
-        NSLog(@"Sub is Arrival earlier than Base");
+        NSLog(@"<%@%d>Sub is Arrival earlier than Base", name, _count);
     }
     else if (result->arrivalStatus == kIsSame) {
-        NSLog(@"Arrival time is Same");
+        NSLog(@"<%@%d>Arrival time is Same", name, _count);
     }
     else if (result->arrivalStatus == kIsAheadBase) {
-        NSLog(@"Base is Arrival earlier than Sub");
+        NSLog(@"<%@%d>Base is Arrival earlier than Sub", name, _count);
     }
-    NSLog(@"The SAMPLE LAG is %d sample", result->arrivalSampleLag);
-    NSLog(@"The TIME LAG is %.12f second", result->arrivalTimeLag);
-    NSLog(@"-------- DUMP %@ END --------", name);
+    NSLog(@"<%@%d>The SAMPLE LAG is %d sample", name, _count, result->arrivalSampleLag);
+    NSLog(@"<%@%d>The TIME LAG is %.12f second", name, _count, result->arrivalTimeLag);
+    NSLog(@"-------- DUMP %@ END (%d)--------", name, _count);
 
 }
 

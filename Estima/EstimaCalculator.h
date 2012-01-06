@@ -12,15 +12,15 @@
 #import "AudioDataHandle.h"
 #import "Utils.h"
 
-#define kPowerNumberOfTwo 3.0 // 2の肩の数
-#define kMicDist     50.0
-#define kSonic       340000.0
-#define kSamplePer   kInputDataSampleRate
-#define kLimitTime   ((kMicDist) / (kSonic))
-#define kPerSample   (1.0 / ( kSamplePer))
-#define kLimitSample ((int)((kLimitTime / (1.0 / (kSamplePer * pow(2.0, kPowerNumberOfTwo))) + 0.5)))
-#define kOffset      (500)
-#define kRange       (2000 + kOffset)
+#define kPowerNumberOfTwo 2.0 // 2の肩の数
+#define kMicDist       50.0
+#define kSonic         337330.0
+#define kSamplePer     kInputDataSampleRate
+#define kLimitTime     ((kMicDist) / (kSonic))
+#define kUpedPerSample (1.0 / (kSamplePer * pow(2.0, kPowerNumberOfTwo)))
+#define kLimitSample   ((int)((kLimitTime / kUpedPerSample) + 1.0))
+#define kOffset        (500)
+#define kRange         (25000 + kOffset)
 
 typedef enum {
     kIsSame = 0,
@@ -61,6 +61,7 @@ typedef struct {
 
     BOOL  _isCalculating;
     dispatch_queue_t _inputQueue;
+    unsigned int _count;
 }
 
 @property(weak)     id<EstimaCalculatorDelegate> delegate;
@@ -76,7 +77,8 @@ typedef struct {
 
 - (void)calcCCFWithData:(double *)baseData
                 subData:(double *)subData
-                 result:(sCCFResult *)result;
+                 result:(sCCFResult *)result
+                   name:(NSString *)name;
 
 - (void)estimate:(sAnswers *)ans;
 

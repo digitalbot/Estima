@@ -308,7 +308,7 @@
             return kRingBufferError_SlightlyAhead;
         }
     }
-    NSLog(@"<OK check time bounds>");
+    //NSLog(@"<OK check time bounds>");
     return kRingBufferError_OK;
 }
 
