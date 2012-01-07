@@ -51,7 +51,7 @@
     [self drawMic:(50.0 / 2)];
     
     
-    NSLog(@"DRAW DONE.");
+    NSLog(@"<%u>DRAW DONE.", _countNumber);
     NSLog(@" ");
 	[[self openGLContext] flushBuffer];
 }
@@ -71,10 +71,11 @@
     gluLookAt(-30.0, -65.0, 45.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
 }
 
-- (void)setResult:(double)ansX :(double)ansY :(double)ansZ {
-    _resultX = ansX / 2;
-    _resultY = ansY / 2;
-    _resultZ = ansZ / 2;
+- (void)setResult:(double)ansX :(double)ansY :(double)ansZ :(unsigned int)num {
+    _resultX = 10 * (ansX / 2);
+    _resultY = 10 * (ansY / 2);
+    _resultZ = 10 * (ansZ / 2);
+    _countNumber = num;
     [self setNeedsDisplay:YES];
 }
 

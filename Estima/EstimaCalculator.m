@@ -56,10 +56,10 @@
 #pragma mark - delegate method
 
 - (void)inputBufferDidFilledBuffer:(AudioBufferList *)bufferList
-                       numOfFrames:(unsigned int)numOfFrames {
+                   withCountNumber:(unsigned int)num {
 
     if (_isCalculating == YES) {
-        _count++;
+        _count = num;
         NSLog(@" ");
         NSLog(@"<%d>BUFFER DID FILLED. START CALUCULATE!", _count);
         // debug
@@ -86,9 +86,18 @@
             upedBase[i] = (double)updB[i];
             upedSub[i] = (double)updS[i];
         }
+        FILE *bfp = fopen("/Users/kosuke/desktop/ccfwav_base.txt", "w");
+        FILE *sfp = fopen("/Users/kosuke/desktop/ccfwavs_sub.txt", "w");
+        for (int i=0; i<self.responseNumberOfSamples; i++) {
+            fprintf(bfp, "%d %f\n", i, upedBase[i]);
+            fprintf(sfp, "%d %f\n", i, upedSub[i]);
+        }
+        fclose(bfp);
+        fclose(sfp);
 
-        [self calcCCFWithData:upedBase subData:upedSub result:&ccfresult];
+        [self calcCCFWithData:upedBase subData:upedSub result:&ccfresult name:@"testBaseToSub"];
         [self dumpCCFResult:&ccfresult withName:@"test"];
+        NSLog(@"OK");
         
         free(upedBase);
         free(upedSub);
@@ -97,9 +106,9 @@
         free(updB);
         free(updS);
         return;
-         */
+        */
         //
-        [self calculateWithABL:bufferList numOfFrames:numOfFrames];
+        [self calculateWithABL:bufferList];
     }
     else {
         NSLog(@"calcurator is stopping.");
@@ -109,14 +118,32 @@
 
 #pragma mark - calculation CORE
 
-- (void)calculateWithABL:(AudioBufferList *)bufferList
-             numOfFrames:(unsigned int)numOfFrames {
+- (void)calculateWithABL:(AudioBufferList *)bufferList {
 
+    unsigned int num = _count;
     float *dataO = (float *)bufferList->mBuffers[0].mData;
     float *dataA = (float *)bufferList->mBuffers[1].mData;
     float *dataB = (float *)bufferList->mBuffers[2].mData;
     float *dataC = (float *)bufferList->mBuffers[3].mData;
-
+    
+    //
+    /*
+    float *dataO = MEM_CALLOC(numOfFrames, sizeof(float));
+    float *dataA = MEM_CALLOC(numOfFrames, sizeof(float));
+    float *dataB = MEM_CALLOC(numOfFrames, sizeof(float));
+    float *dataC = MEM_CALLOC(numOfFrames, sizeof(float));
+    
+    AudioDataHandle *sanyon = [[AudioDataHandle alloc] initWithWavFile:@"/Users/kosuke/Desktop/measurement_34.wav"];
+    AudioDataHandle *ichini = [[AudioDataHandle alloc] initWithWavFile:@"/Users/kosuke/Desktop/measurement_12.wav"];
+    for (int i=0; i<(96000*3); i++) {
+        dataO[i] = (float)[sanyon access:0 atIndex:i+(96000*4)];
+        dataA[i] = (float)[sanyon access:1 atIndex:i+(96000*4)];
+        dataB[i] = (float)[ichini access:0 atIndex:i+(96000*4)];
+        dataC[i] = (float)[ichini access:1 atIndex:i+(96000*4)];
+    }
+     */
+    //
+    
     /* debug
     for (int i=0; i<50; i++) {
         printf(">ch: %.10f >1ch: %.10f >2ch: %.10f >3ch: %.10f\n", dataO[i], dataA[i], dataB[i], dataC[i]);
@@ -129,7 +156,7 @@
 
     /*
     char path[100];
-    sprintf(path, "/Users/kosuke/Desktop/EstimaDebug/upedO_%d.txt", _count);
+     sprintf(path, "/Users/kosuke/Desktop/EstimaDebug/upedO_%d.txt", _count);
         FILE *fp = fopen(path, "w");
     for (int i=0; i<self.responseNumberOfSamples; i++) {
             fprintf(fp, "%d %10f\n", i, _interpolatedDataO[i]);
@@ -160,15 +187,15 @@
     //[audioDatas dumpDatas];
     //[audioDatas dumpInfo:@"test"];
     free(temp);
-    /*
+    
     char hoge[100];
     char foo[100];
     char bar[100];
     char baz[100];
-    sprintf(hoge, "/Users/kosuke/Desktop/EstimaDebug/handlledO_%d.txt", _count);
-    sprintf(foo, "/Users/kosuke/Desktop/EstimaDebug/handlledA_%d.txt", _count);
-    sprintf(bar, "/Users/kosuke/Desktop/EstimaDebug/handlledB_%d.txt", _count);
-    sprintf(baz, "/Users/kosuke/Desktop/EstimaDebug/handlledC_%d.txt", _count);
+    sprintf(hoge, "/Users/kosuke/Desktop/EstimaResult/wavs/upedO_%d.txt", _count);
+    sprintf(foo, "/Users/kosuke/Desktop/EstimaResult/wavs/upedA_%d.txt", _count);
+    sprintf(bar, "/Users/kosuke/Desktop/EstimaResult/wavs/upedB_%d.txt", _count);
+    sprintf(baz, "/Users/kosuke/Desktop/EstimaResult/wavs/upedC_%d.txt", _count);
     FILE *zero = fopen(hoge, "w");
     FILE *one = fopen(foo, "w");
     FILE *two = fopen(bar, "w");
@@ -176,18 +203,18 @@
     for (int i=kOffset; i<kRange; i++) {
         fprintf(zero, "%d %f\n", i, [audioDatas access:0 atIndex:i]);
         fprintf(one, "%d %f\n", i, [audioDatas access:1 atIndex:i]);
-        fprintf(two, "%d %f\n", i, [audioDatas access:2 atIndex:i]);
+       fprintf(two, "%d %f\n", i, [audioDatas access:2 atIndex:i]);
         fprintf(three, "%d %f\n", i, [audioDatas access:3 atIndex:i]);
     }
     fclose(zero);
     fclose(one);
     fclose(two);
     fclose(three);
-    */
+    
     [self calcCCFWithData:[audioDatas dataWithChannel:0]
                   subData:[audioDatas dataWithChannel:0]
                    result:&_resultOtoA
-                     name:@"OtoO"];
+                     name:@"self"];
     [self calcCCFWithData:[audioDatas dataWithChannel:0]
                   subData:[audioDatas dataWithChannel:1]
                    result:&_resultOtoA
@@ -220,7 +247,9 @@
         //answers.y = 150.0;
         //answers.z = 100.0;
         
-        [_delegate didCalculated:self withAnswers:answers];
+        [_delegate didCalculated:self
+                     withAnswers:answers
+                        countNum:num];
     });
 }
 
@@ -277,7 +306,7 @@
     /* set result */
     for (int i=0; i<resNumOfSamples; i++) {
         double tmp = resComplex.realp[i] / pow(2, baseLog2n);
-        resData[i] = ((fabs(tmp) - 0.0005) < 0) ? 0 : tmp;
+        resData[i] = tmp;//((fabs(tmp) - 0.0005) < 0) ? 0 : tmp;
     }
 
     vDSP_destroy_fftsetup(fftSetup);
@@ -299,10 +328,10 @@
 
     result->max = 0;
     double *resultArray = MEM_CALLOC(kLimitSample * 2, sizeof(double));
-    //const char *cName = [name UTF8String];
-    //char path[100];
-    //sprintf(path, "/Users/kosuke/Desktop/EstimaDebug/ccf%s_%d.txt", cName, _count);
-    //FILE *fp = fopen(path, "w");
+    const char *cName = [name UTF8String];
+    char path[100];
+    sprintf(path, "/Users/kosuke/Desktop/EstimaResult/ccf/ccf%s_%d.txt", cName, _count);
+    FILE *fp = fopen(path, "w");
     for (int i=kOffset; i<kLimitSample*2+kOffset; i++) {
         double tempBase = 0.0;
         double tempSub  = 0.0;
@@ -313,13 +342,13 @@
         }
         
         resultArray[i-kOffset] /= sqrt(tempBase * tempSub);
-        //fprintf(fp, "%d %f\n", i - kOffset, resultArray[i-kOffset]);
+        fprintf(fp, "%d %f\n", i - kOffset, resultArray[i-kOffset]);
         if (result->max < resultArray[i-kOffset]) {
             result->max = resultArray[i-kOffset];
             result->indexOfMax = i - kOffset;
         }
     }
-    //fclose(fp);
+    fclose(fp);
     if (result->indexOfMax < kLimitSample - 1) {
         result->arrivalStatus    = kIsAheadBase;
         result->arrivalSampleLag = - (kLimitSample -1 - result->indexOfMax);
@@ -382,9 +411,10 @@
                                      )
                                   )
                            );
-    
+    NSLog(@"tmpDONE");
+    NSLog(@"tA:%f |tB:%f |tC:%f", tmpOne, tmpTwo, tmpThree);
     double rO;
-    if (!tmpOne) {
+    if (tmpOne == 0.0) {
         rO = - 1 * (tmpThree / tmpTwo);
     }
     else {
@@ -392,9 +422,17 @@
              + (sqrt(pow(tmpTwo, 2)
                      - (4 * tmpOne * tmpThree)
                      )
-                / abs(2 * tmpOne));
+                / fabs(2 * tmpOne));
+//        rO = - 1 * (tmpTwo / (2 * tmpOne))
+//        - (sqrt(pow(tmpTwo, 2)
+//                - (4 * tmpOne * tmpThree)
+//                )
+//           / (2 * tmpOne));
+
+        NSLog(@"tAisnot 0");
+        
     }
-    
+    NSLog(@"rO:%f", rO);
     double rA = rO - drA;
     double rB = rO - drB;
     double rC = rO - drC;
@@ -403,24 +441,30 @@
     double p2_rB = pow(rB, 2);
     double p2_rC = pow(rC, 2);
     
-    ans->x = (p2_rA - p2_dist - p2_rO) / (2 * kMicDist);
-    ans->y = (+ (2 * p2_rB)
-             - p2_dist
-             - p2_rO
-             - p2_rA
-             ) / (2 * sqrt(3) * kMicDist);
-    ans->z = (+ (3 * p2_rC)
-             - p2_dist
-             - p2_rO
-             - p2_rA
-             - p2_rB
-             ) / (2 * sqrt(6) * kMicDist);
+    double tmpX = (p2_rA - p2_dist - p2_rO) / (2 * kMicDist);
+    double tmpY = (+ (2 * p2_rB)
+                   - p2_dist
+                   - p2_rO
+                   - p2_rA
+                   ) / (2 * sqrt(3) * kMicDist);
+    double tmpZ = (+ (3 * p2_rC)
+                   - p2_dist
+                   - p2_rO
+                   - p2_rA
+                   - p2_rB
+                   ) / (2 * sqrt(6) * kMicDist);
+    //ans->x = (fabs(tmpX) > 50) ? tmpX : 0;
+    //ans->z = (fabs(tmpZ) > 50) ? tmpZ : 0;
+    //ans->y = (fabs(tmpY) > 50) ? tmpY : 0;
+    ans->x = tmpX;
+    ans->y = tmpY;
+    ans->z = tmpZ;
     
-    NSLog(@"%d[RESULT]: X=%.10f", _count, ans->x);
-    NSLog(@"%d[RESULT]: Y=%.10f", _count, ans->y);
-    NSLog(@"%d[RESULT]: Z=%.10f", _count, ans->z);
+    NSLog(@"%d[RESULT]: X=%f", _count, ans->x);
+    NSLog(@"%d[RESULT]: Y=%f", _count, ans->y);
+    NSLog(@"%d[RESULT]: Z=%f", _count, ans->z);
+    
 }
-
 
 #pragma mark - dump methods
 

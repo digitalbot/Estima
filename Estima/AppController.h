@@ -12,7 +12,7 @@
 #import "EstimaCalculator.h"
 #import "Utils.h"
 
-#define kIntervalTime 0.4
+#define kIntervalTime 0.7
 
 @interface AppController : NSObject <NSWindowDelegate, EstimaCalculatorDelegate> {
     AudioInputBuffer *_audioInputBuf;
@@ -24,6 +24,9 @@
     __weak NSButton           *_monitorButton;
     
     dispatch_queue_t _mainQueue;
+    FILE *_fp;
+    
+    NSDate *_firstTime;
 
 }
 
@@ -33,9 +36,10 @@
 @property (weak) IBOutlet NSTextField *xLabel;
 @property (weak) IBOutlet NSTextField *yLabel;
 @property (weak) IBOutlet NSTextField *zLabel;
+@property (weak) IBOutlet NSButton *closeFpButton;
 
 
 - (IBAction)startAndStop:(id)sender;
 - (IBAction)monitoringStartAndStop:(id)sender;
-
+- (IBAction)closeFp:(id)sender;
 @end

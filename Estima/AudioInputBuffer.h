@@ -27,6 +27,7 @@
     
     float **_buffers;
     unsigned int _numberOfFrames;
+    unsigned int _countNumber;
 
 }
 
@@ -42,5 +43,5 @@
 @protocol AudioInputBufferDelegate <NSObject>
 @required
 - (void)inputBufferDidFilledBuffer:(AudioBufferList *)bufferList
-                       numOfFrames:(unsigned int)numOfFrames;
+                   withCountNumber:(unsigned int)num;
 @end

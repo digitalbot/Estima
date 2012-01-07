@@ -12,15 +12,15 @@
 #import "AudioDataHandle.h"
 #import "Utils.h"
 
-#define kPowerNumberOfTwo 2.0 // 2の肩の数
-#define kMicDist       50.0
-#define kSonic         337330.0
+#define kPowerNumberOfTwo 0.0 // 2の肩の数
+#define kMicDist       5.0
+#define kSonic         33899.30921
 #define kSamplePer     kInputDataSampleRate
 #define kLimitTime     ((kMicDist) / (kSonic))
 #define kUpedPerSample (1.0 / (kSamplePer * pow(2.0, kPowerNumberOfTwo)))
-#define kLimitSample   ((int)((kLimitTime / kUpedPerSample) + 1.0))
-#define kOffset        (500)
-#define kRange         (22000 + kOffset)
+#define kLimitSample   ((int)((kLimitTime / kUpedPerSample)))
+#define kOffset        (1000)
+#define kRange         (60000 + kOffset)
 
 typedef enum {
     kIsSame = 0,
@@ -69,8 +69,7 @@ typedef struct {
 @property(readonly) unsigned int                 baseNumberOfSamples;
 @property(readonly) unsigned int                 responseNumberOfSamples;
 
-- (void)calculateWithABL:(AudioBufferList *)bufferList
-             numOfFrames:(unsigned int)numOfFrames;
+- (void)calculateWithABL:(AudioBufferList *)bufferList;
 
 - (void)interpolateWithData:(float *)baseData
                responseData:(float *)resData;
@@ -89,6 +88,7 @@ typedef struct {
 @protocol EstimaCalculatorDelegate <NSObject>
 @required
 - (void)didCalculated:(EstimaCalculator *)calculator
-          withAnswers:(sAnswers)answers;
+          withAnswers:(sAnswers)answers
+             countNum:(unsigned int)num;
 @end
 

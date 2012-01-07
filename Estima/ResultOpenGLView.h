@@ -19,6 +19,7 @@
     double _resultX;
     double _resultY;
     double _resultZ;
+    unsigned _countNumber;
     
     double _previousX;
     double _previousY;
@@ -30,6 +31,6 @@
 - (void)reshape;
 - (void)drawRect:(NSRect)dirtyRect;
 - (void)dealloc;
-- (void)setResult:(double)ansX :(double)ansY :(double)ansZ;
+- (void)setResult:(double)ansX :(double)ansY :(double)ansZ :(unsigned int)num;
 
 @end

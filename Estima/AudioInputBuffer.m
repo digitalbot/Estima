@@ -109,7 +109,6 @@
     for (int i=0; i<nChannels; i++) {
         temps[i] = (float *)bufferList->mBuffers[i].mData;
     }
-    
     if (_firstInputTime == -1) {
         _firstInputTime = 1;
         _numberOfFrames = numOfFrames;
@@ -151,10 +150,12 @@
             }
             bufList->mBuffers[i].mData = mDatas[i];
         }
+        _countNumber++;
+        unsigned int num = _countNumber;
         /* delegate call */
         dispatch_async(_inputQueue, ^{
             [_delegate inputBufferDidFilledBuffer:bufList
-                                      numOfFrames:requireBufferSizeFrames];
+                                  withCountNumber:num];
             removeAudioBufferList(bufList);
             free(mDatas);
         });

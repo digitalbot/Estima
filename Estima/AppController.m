@@ -10,6 +10,7 @@
 
 
 @implementation AppController
+@synthesize closeFpButton = _closeFpbutton;
 
 @synthesize resultView    = _resultView;
 @synthesize startButton   = _startButton;
@@ -28,6 +29,11 @@
     [_audioInputBuf setDelegate:_calculator];
     [_calculator setDelegate:self];
     _mainQueue = dispatch_get_main_queue();
+    _fp = fopen("/Users/kosuke/Desktop/EstimaResult/results.txt", "w");
+}
+
+- (void)dealloc {
+    fclose(_fp);
 }
 
 #pragma mark - IBAction
@@ -66,14 +72,27 @@
     }
 }
 
+- (IBAction)closeFp:(id)sender {
+    if ([sender state] == NSOnState) {
+        fclose(_fp);
+    }
+}
+
 #pragma mark - EstimaCalculator delegate method
 
 - (void)didCalculated:(EstimaCalculator *)calculator
-          withAnswers:(sAnswers)answers {
+          withAnswers:(sAnswers)answers
+             countNum:(unsigned int)num {
 
     NSLog(@"did calculated!");
-    [_resultView setResult:answers.x :answers.y :answers.z];
+    [_resultView setResult:answers.x :answers.y :answers.z :num];
     dispatch_async(_mainQueue, ^{
+        if (_firstTime == nil) {
+            NSLog(@"first !");
+            _firstTime = [NSDate date];
+        }
+        NSTimeInterval since  = [_firstTime timeIntervalSinceNow];
+        fprintf(_fp, "%f %f %f %f\n", since, answers.x, answers.y, answers.z);
         [_xLabel setStringValue:[NSString stringWithFormat:@"X: %f", answers.x]];
         [_yLabel setStringValue:[NSString stringWithFormat:@"Y: %f", answers.y]];
         [_zLabel setStringValue:[NSString stringWithFormat:@"Z: %f", answers.z]];
