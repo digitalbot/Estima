@@ -20,6 +20,9 @@
 		2185CE9014B4A3B9000B0633 /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = 2185CE8F14B4A3B9000B0633 /* Utils.m */; };
 		2185CE9514B4B857000B0633 /* AudioDataHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 2185CE9314B4B857000B0633 /* AudioDataHandle.m */; };
 		2185CE9614B4B857000B0633 /* AudioDataHandle+WavFileIO.m in Sources */ = {isa = PBXBuildFile; fileRef = 2185CE9414B4B857000B0633 /* AudioDataHandle+WavFileIO.m */; };
+		21ECAE9914D0F9BB00F5AD67 /* XYPlaneOpenGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 21ECAE9814D0F9BA00F5AD67 /* XYPlaneOpenGLView.m */; };
+		21ECAE9C14D0FF1F00F5AD67 /* YZPlaneOpenGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 21ECAE9B14D0FF1F00F5AD67 /* YZPlaneOpenGLView.m */; };
+		21ECAE9F14D1001A00F5AD67 /* XZPlaneOpenGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 21ECAE9E14D1001A00F5AD67 /* XZPlaneOpenGLView.m */; };
 		21F0BC05148A9C7D0012C5C9 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21F0BC04148A9C7D0012C5C9 /* Cocoa.framework */; };
 		21F0BC0F148A9C7D0012C5C9 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 21F0BC0D148A9C7D0012C5C9 /* InfoPlist.strings */; };
 		21F0BC11148A9C7D0012C5C9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 21F0BC10148A9C7D0012C5C9 /* main.m */; };
@@ -57,6 +60,12 @@
 		2185CE9214B4B857000B0633 /* AudioDataHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioDataHandle.h; sourceTree = "<group>"; };
 		2185CE9314B4B857000B0633 /* AudioDataHandle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioDataHandle.m; sourceTree = "<group>"; };
 		2185CE9414B4B857000B0633 /* AudioDataHandle+WavFileIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "AudioDataHandle+WavFileIO.m"; sourceTree = "<group>"; };
+		21ECAE9714D0F9BA00F5AD67 /* XYPlaneOpenGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XYPlaneOpenGLView.h; sourceTree = "<group>"; };
+		21ECAE9814D0F9BA00F5AD67 /* XYPlaneOpenGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XYPlaneOpenGLView.m; sourceTree = "<group>"; };
+		21ECAE9A14D0FF1F00F5AD67 /* YZPlaneOpenGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YZPlaneOpenGLView.h; sourceTree = "<group>"; };
+		21ECAE9B14D0FF1F00F5AD67 /* YZPlaneOpenGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YZPlaneOpenGLView.m; sourceTree = "<group>"; };
+		21ECAE9D14D1001A00F5AD67 /* XZPlaneOpenGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XZPlaneOpenGLView.h; sourceTree = "<group>"; };
+		21ECAE9E14D1001A00F5AD67 /* XZPlaneOpenGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XZPlaneOpenGLView.m; sourceTree = "<group>"; };
 		21F0BC00148A9C7D0012C5C9 /* Estima.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Estima.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		21F0BC04148A9C7D0012C5C9 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		21F0BC07148A9C7D0012C5C9 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -147,6 +156,21 @@
 			name = IO;
 			sourceTree = "<group>";
 		};
+		21ECAEA014D1050500F5AD67 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				21ECAE9714D0F9BA00F5AD67 /* XYPlaneOpenGLView.h */,
+				21ECAE9814D0F9BA00F5AD67 /* XYPlaneOpenGLView.m */,
+				21ECAE9A14D0FF1F00F5AD67 /* YZPlaneOpenGLView.h */,
+				21ECAE9B14D0FF1F00F5AD67 /* YZPlaneOpenGLView.m */,
+				21ECAE9D14D1001A00F5AD67 /* XZPlaneOpenGLView.h */,
+				21ECAE9E14D1001A00F5AD67 /* XZPlaneOpenGLView.m */,
+				215DB31714B41A630032FE2D /* ResultOpenGLView.h */,
+				215DB31814B41A630032FE2D /* ResultOpenGLView.m */,
+			);
+			name = View;
+			sourceTree = "<group>";
+		};
 		21F0BBF5148A9C7C0012C5C9 = {
 			isa = PBXGroup;
 			children = (
@@ -194,8 +218,7 @@
 			isa = PBXGroup;
 			children = (
 				21F0BC19148A9C7D0012C5C9 /* MainMenu.xib */,
-				215DB31714B41A630032FE2D /* ResultOpenGLView.h */,
-				215DB31814B41A630032FE2D /* ResultOpenGLView.m */,
+				21ECAEA014D1050500F5AD67 /* View */,
 				21F0BC2B148A9CE60012C5C9 /* App Main */,
 				215DB31614B418DC0032FE2D /* Audio */,
 				215DB31414B4187D0032FE2D /* RingBuffer */,
@@ -308,6 +331,9 @@
 				2185CE9014B4A3B9000B0633 /* Utils.m in Sources */,
 				2185CE9514B4B857000B0633 /* AudioDataHandle.m in Sources */,
 				2185CE9614B4B857000B0633 /* AudioDataHandle+WavFileIO.m in Sources */,
+				21ECAE9914D0F9BB00F5AD67 /* XYPlaneOpenGLView.m in Sources */,
+				21ECAE9C14D0FF1F00F5AD67 /* YZPlaneOpenGLView.m in Sources */,
+				21ECAE9F14D1001A00F5AD67 /* XZPlaneOpenGLView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

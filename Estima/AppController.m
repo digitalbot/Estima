@@ -10,14 +10,25 @@
 
 
 @implementation AppController
-@synthesize closeFpButton = _closeFpbutton;
+
 
 @synthesize resultView    = _resultView;
 @synthesize startButton   = _startButton;
 @synthesize monitorButton = _monitorButton;
-@synthesize xLabel = _xLabel;
-@synthesize yLabel = _yLabel;
-@synthesize zLabel = _zLabel;
+@synthesize closeFpButton = _closeFpbutton;
+@synthesize countLabel = _countLabel;
+@synthesize xLabel     = _xLabel;
+@synthesize yLabel     = _yLabel;
+@synthesize zLabel     = _zLabel;
+@synthesize PlaneWindow = _PlaneWindow;
+@synthesize xyView      = _xyView;
+@synthesize yzView      = _yzView;
+@synthesize xzView      = _xzView;
+@synthesize planeCount = _planeCount;
+@synthesize planeX     = _planeX;
+@synthesize planeY     = _planeY;
+@synthesize planeZ     = _planeZ;
+
 
 #pragma mark - init
 
@@ -29,7 +40,7 @@
     [_audioInputBuf setDelegate:_calculator];
     [_calculator setDelegate:self];
     _mainQueue = dispatch_get_main_queue();
-    _fp = fopen("/Users/kosuke/Desktop/EstimaResult/results.txt", "w");
+    _fp = fopen("/Users/kosuke/Desktop/results.txt", "w");
 }
 
 - (void)dealloc {
@@ -81,21 +92,30 @@
 #pragma mark - EstimaCalculator delegate method
 
 - (void)didCalculated:(EstimaCalculator *)calculator
-          withAnswers:(sAnswers)answers
+          withAnswers:(stAnswers)answers
              countNum:(unsigned int)num {
 
-    NSLog(@"did calculated!");
+    NSLog(@"<%d>did calculated!", num);
     [_resultView setResult:answers.x :answers.y :answers.z :num];
+    [_xyView setResult:answers.x :answers.y :answers.z :num];
+    [_yzView setResult:answers.x :answers.y :answers.z :num];
+    [_xzView setResult:answers.x :answers.y :answers.z :num];
     dispatch_async(_mainQueue, ^{
         if (_firstTime == nil) {
             NSLog(@"first !");
             _firstTime = [NSDate date];
         }
-        NSTimeInterval since  = [_firstTime timeIntervalSinceNow];
+        NSTimeInterval since  = - [_firstTime timeIntervalSinceNow];
         fprintf(_fp, "%f %f %f %f\n", since, answers.x, answers.y, answers.z);
+        [_countLabel setStringValue:[NSString stringWithFormat:@"count: %d", num]];
         [_xLabel setStringValue:[NSString stringWithFormat:@"X: %f", answers.x]];
         [_yLabel setStringValue:[NSString stringWithFormat:@"Y: %f", answers.y]];
         [_zLabel setStringValue:[NSString stringWithFormat:@"Z: %f", answers.z]];
+        
+        [_planeCount setStringValue:[NSString stringWithFormat:@"count: %d", num]];
+        [_planeX setStringValue:[NSString stringWithFormat:@"X: %f", answers.x]];
+        [_planeY setStringValue:[NSString stringWithFormat:@"Y: %f", answers.y]];
+        [_planeZ setStringValue:[NSString stringWithFormat:@"Z: %f", answers.z]];
     });
     
     return;

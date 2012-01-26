@@ -11,7 +11,7 @@
 #import "RingBuffer.h"
 #import "AudioDevice.h"
 #import "AudioDeviceList.h"
-
+#import "Utils.h"
 
 @implementation AudioInputBuffer
 
@@ -31,10 +31,12 @@
         _firstInputTime = -1;
         _bufferSizeTime = bufferSizeTime;
 
-        _ringBuffer = [[RingBuffer alloc] initWithNumberOfChannels:_audioUnitIO.recordFormat.mChannelsPerFrame
-                                                         frameSize:_audioUnitIO.recordFormat.mBytesPerFrame
-                                                    capacityFrames:(_audioUnitIO.recordFormat.mSampleRate
-                                                                    * _bufferSizeTime + kAudioUnitIODeviceBufferSize)];
+        _ringBuffer
+        = [[RingBuffer alloc] initWithNumberOfChannels:_audioUnitIO.recordFormat.mChannelsPerFrame
+                                             frameSize:_audioUnitIO.recordFormat.mBytesPerFrame
+                                        capacityFrames:((_audioUnitIO.recordFormat.mSampleRate
+                                                        * _bufferSizeTime)
+                                                        + kAudioUnitIODeviceBufferSize)];
 
         _inputQueue = dispatch_queue_create("AudioInputBuffer", NULL);
 
@@ -101,14 +103,16 @@
                       sampleTime:(double)sampleTime
                      numOfFrames:(unsigned int)numOfFrames {
 
-    __block float *checkman;
+    /* prepare */
     unsigned int nChannels = _audioUnitIO.recordFormat.mChannelsPerFrame;
     nChannels = (nChannels > 4) ? 4 : nChannels;
-    
+
     float **temps = MEM_CALLOC(nChannels, sizeof(float *));
     for (int i=0; i<nChannels; i++) {
         temps[i] = (float *)bufferList->mBuffers[i].mData;
     }
+
+
     if (_firstInputTime == -1) {
         _firstInputTime = 1;
         _numberOfFrames = numOfFrames;
@@ -125,23 +129,23 @@
         unsigned int posOfStart = _numberOfFrames - numOfFrames;
 
         for (int i=0; i<nChannels; i++) {
-            checkman = realloc(_buffers[i], _numberOfFrames * sizeof(float));
-            if (checkman == NULL) {
-                NSLog(@"[FATAL]: Out of memory.");
-                exit(-1);
-            }
-            _buffers[i] = checkman;
+            _buffers[i] = MEM_REALLOC(_buffers[i], _numberOfFrames * sizeof(float));
             for (int j=posOfStart; j<_numberOfFrames; j++) {
                 _buffers[i][j] = temps[i][j-posOfStart];
             }
         }
     }
-    
+
+    /* filled */
     unsigned int requireBufferSizeFrames = _audioUnitIO.recordFormat.mSampleRate * _bufferSizeTime;
     if (_numberOfFrames >= requireBufferSizeFrames) {
+        _countNumber++;
+
+        /* prepare bufList of sending */
         AudioBufferList *bufList;
         bufList = createAudioBufferList(_audioUnitIO.recordFormat.mChannelsPerFrame,
                                         requireBufferSizeFrames * _audioUnitIO.recordFormat.mBytesPerFrame);
+
         float **mDatas = MEM_CALLOC(nChannels, sizeof(float *));
         for (int i=0; i<nChannels; i++) {
             mDatas[i] = MEM_CALLOC(_numberOfFrames, sizeof(float));
@@ -150,67 +154,68 @@
             }
             bufList->mBuffers[i].mData = mDatas[i];
         }
-        _countNumber++;
-        unsigned int num = _countNumber;
+
         /* delegate call */
         dispatch_async(_inputQueue, ^{
             [_delegate inputBufferDidFilledBuffer:bufList
-                                  withCountNumber:num];
+                               withNumberOfFrames:requireBufferSizeFrames
+                                      countNumber:_countNumber];
             removeAudioBufferList(bufList);
             free(mDatas);
         });
-        
+
+        /* ringing */
         unsigned int numOfExceeds = _numberOfFrames - requireBufferSizeFrames;
         for (int i=0; i<nChannels; i++) {
             for (int j=requireBufferSizeFrames; j<_numberOfFrames; j++) {
                 _buffers[i][j-requireBufferSizeFrames] = _buffers[i][j];
             }
-            checkman = realloc(_buffers[i], numOfExceeds);
-            if (checkman == NULL) {
-                NSLog(@"[FATAL]: Out of memory.");
-                exit(-1);
-            }
-            _buffers[i] = checkman;
+            _buffers[i] = MEM_REALLOC(_buffers[i], numOfExceeds);
         }
         _numberOfFrames = numOfExceeds;
     }
     free(temps);
-    
-//     double requireBufferSizeFrames;
-//     __block OSStatus err = noErr;
-
-//     if (_firstInputTime == -1) {
-//         _firstInputTime = sampleTime;
-//     }
-
-//     [_ringBuffer storeInBuffer:bufferList
-//                     sampleTime:sampleTime
-//                    numOfFrames:numOfFrames];
-
-//     /* if filled */
-//     requireBufferSizeFrames = _audioUnitIO.recordFormat.mSampleRate * _bufferSizeTime;
-//     if ((sampleTime - _firstInputTime + numOfFrames) >= requireBufferSizeFrames) {
-//         dispatch_async(_inputQueue, ^{
-//             AudioBufferList *bufList;
-//             bufList = createAudioBufferList(_audioUnitIO.recordFormat.mChannelsPerFrame,
-//                                             requireBufferSizeFrames * _audioUnitIO.recordFormat.mBytesPerFrame);
-
-//             err = [_ringBuffer fetchFromBuffer:bufList
-//                                   inSampleTime:_firstInputTime
-//                                    numOfFrames:requireBufferSizeFrames];
-//             _firstInputTime /* = - 1;*/ += requireBufferSizeFrames;
-
-//             if (err) {
-//                 NSLog(@"[ERROR]: fetch error.");
-//                 return;
-//             }
-
-//             [_delegate inputBufferDidFilledBuffer:bufList
-//                                       numOfFrames:requireBufferSizeFrames];
-//             removeAudioBufferList(bufList);
-//         });
-//     }
-
 }
+
+// OLD
+//- (void)inputUnitDidFilledBuffer:(AudioBufferList *)bufferList
+//                      sampleTime:(double)sampleTime
+//                     numOfFrames:(unsigned int)numOfFrames {
+//
+//    double requireBufferSizeFrames;
+//    __block OSStatus err = noErr;
+//
+//    if (_firstInputTime == -1) {
+//        _firstInputTime = sampleTime;
+//    }
+//
+//    [_ringBuffer storeInBuffer:bufferList
+//                    sampleTime:sampleTime
+//                   numOfFrames:numOfFrames];
+//
+//    /* if filled */
+//    requireBufferSizeFrames = _audioUnitIO.recordFormat.mSampleRate * _bufferSizeTime;
+//    if ((sampleTime - _firstInputTime + numOfFrames) >= requireBufferSizeFrames) {
+//        dispatch_async(_inputQueue, ^{
+//            AudioBufferList *bufList;
+//            bufList = createAudioBufferList(_audioUnitIO.recordFormat.mChannelsPerFrame,
+//                                            requireBufferSizeFrames * _audioUnitIO.recordFormat.mBytesPerFrame);
+//
+//                 err = [_ringBuffer fetchFromBuffer:bufList
+//                                       inSampleTime:_firstInputTime
+//                                        numOfFrames:requireBufferSizeFrames];
+//            _firstInputTime += requireBufferSizeFrames;
+//
+//            if (err) {
+//                NSLog(@"[ERROR]: fetch error.");
+//                return;
+//            }
+//
+//            [_delegate inputBufferDidFilledBuffer:bufList
+//                                      numOfFrames:requireBufferSizeFrames];
+//            removeAudioBufferList(bufList);
+//        });
+//    }
+//}
 
 @end
