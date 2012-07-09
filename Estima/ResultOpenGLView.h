@@ -14,7 +14,7 @@
 #import <GLUT/GLUT.h>
 #import "Utils.h"
 
-#define kResultCount 25
+#define kResultCount 20
 
 typedef struct {
     double positionX;

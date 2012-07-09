@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Estima/EstimaCalculator.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.0' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP' /><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/38.html'>Estima</a>/EstimaCalculator.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='1.html#L12' title='Included from 12 in Estima/AppController.h.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1' /><em class='comment'>//</em>
+<a id='L2' name='L2' /><em class='comment'>//  EstimaCalculator.h</em>
+<a id='L3' name='L3' /><em class='comment'>//  Estima</em>
+<a id='L4' name='L4' /><em class='comment'>//</em>
+<a id='L5' name='L5' /><em class='comment'>//  Created by kosuke nakamura on 12/01/04.</em>
+<a id='L6' name='L6' /><em class='comment'>//  Copyright (c) 2012年 kosuke nakamura. All rights reserved.</em>
+<a id='L7' name='L7' /><em class='comment'>//</em>
+<a id='L8' name='L8' />
+<a id='L9' name='L9' /><em class='sharp'>#import</em> &lt;Foundation/Foundation.h&gt;
+<a id='L10' name='L10' /><em class='sharp'>#import</em> &lt;Accelerate/Accelerate.h&gt;
+<a id='L11' name='L11' /><em class='sharp'>#import</em> "<a href='12.html'>AudioInputBuffer.h</a>"
+<a id='L12' name='L12' /><em class='sharp'>#import</em> "<a href='6.html'>AudioDataHandle.h</a>"
+<a id='L13' name='L13' /><em class='sharp'>#import</em> "<a href='28.html'>Utils.h</a>"
+<a id='L14' name='L14' />
+<a id='L15' name='L15' /><em class='sharp'>#define</em> <a href='../R/11.html' title='Multiple refered from 2 places.'>kPowerNumberOfTwo</a> 2.0 <em class='comment'>// 2の肩の数</em>
+<a id='L16' name='L16' /><em class='sharp'>#define</em> <a href='../S/21.html#L18' title='Refered from 18 in Estima/EstimaCalculator.h.'>kMicDist</a>          5.0
+<a id='L17' name='L17' /><em class='sharp'>#define</em> <a href='../S/21.html#L18' title='Refered from 18 in Estima/EstimaCalculator.h.'>kSonic</a>            33899.30921
+<a id='L18' name='L18' /><em class='sharp'>#define</em> <a href='../S/21.html#L21' title='Refered from 21 in Estima/EstimaCalculator.h.'>kLimitTime</a>        ((<a href='../S/21.html#L16' title='Defined at 16 in Estima/EstimaCalculator.h.'>kMicDist</a>) / (<a href='../S/21.html#L17' title='Defined at 17 in Estima/EstimaCalculator.h.'>kSonic</a>))
+<a id='L19' name='L19' /><em class='sharp'>#define</em> <a href='../S/21.html#L20' title='Refered from 20 in Estima/EstimaCalculator.h.'>kSamplePer</a>        <a href='../S/14.html#L17' title='Defined at 17 in Estima/AudioUnitIO.h.'>kInputDataSampleRate</a>
+<a id='L20' name='L20' /><em class='sharp'>#define</em> <a href='../S/21.html#L21' title='Refered from 21 in Estima/EstimaCalculator.h.'>kUpedPerSample</a>    (1.0 / (<a href='../S/21.html#L19' title='Defined at 19 in Estima/EstimaCalculator.h.'>kSamplePer</a> * pow(2.0, <a href='../S/21.html#L15' title='Defined at 15 in Estima/EstimaCalculator.h.'>kPowerNumberOfTwo</a>)))
+<a id='L21' name='L21' /><em class='sharp'>#define</em> <a href='../S/21.html#L22' title='Refered from 22 in Estima/EstimaCalculator.h.'>kLimitSample</a>      ((<strong class='reserved'>int</strong>)((<a href='../S/21.html#L18' title='Defined at 18 in Estima/EstimaCalculator.h.'>kLimitTime</a> / <a href='../S/21.html#L20' title='Defined at 20 in Estima/EstimaCalculator.h.'>kUpedPerSample</a>)))
+<a id='L22' name='L22' /><em class='sharp'>#define</em> kUpedLimitSample  (<a href='../S/21.html#L21' title='Defined at 21 in Estima/EstimaCalculator.h.'>kLimitSample</a> * pow(2.0, <a href='../S/21.html#L15' title='Defined at 15 in Estima/EstimaCalculator.h.'>kPowerNumberOfTwo</a>))
+<a id='L23' name='L23' /><em class='sharp'>#define</em> <a href='../S/21.html#L24' title='Refered from 24 in Estima/EstimaCalculator.h.'>kOffset</a>           (1000)
+<a id='L24' name='L24' /><em class='sharp'>#define</em> kRange            (10000 + <a href='../S/21.html#L23' title='Defined at 23 in Estima/EstimaCalculator.h.'>kOffset</a>)
+<a id='L25' name='L25' />
+<a id='L26' name='L26' /><strong class='reserved'>typedef</strong> <strong class='reserved'>enum</strong> <em class='brace'>{</em>
+<a id='L27' name='L27' />    kIsSame = 0,
+<a id='L28' name='L28' />    kIsAheadBase,
+<a id='L29' name='L29' />    kIsAheadSub,
+<a id='L30' name='L30' /><em class='brace'>}</em> <a href='../S/21.html#L37' title='Refered from 37 in Estima/EstimaCalculator.h.'>eArrivalStatuses</a>;
+<a id='L31' name='L31' />
+<a id='L32' name='L32' /><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <em class='brace'>{</em>
+<a id='L33' name='L33' />    <strong class='reserved'>double</strong>           max;
+<a id='L34' name='L34' />    <strong class='reserved'>int</strong>              indexOfMax;
+<a id='L35' name='L35' />    <strong class='reserved'>int</strong>              arrivalSampleLag;
+<a id='L36' name='L36' />    <strong class='reserved'>double</strong>           arrivalTimeLag;
+<a id='L37' name='L37' />    <a href='../S/21.html#L30' title='Defined at 30 in Estima/EstimaCalculator.h.'>eArrivalStatuses</a> arrivalStatus;
+<a id='L38' name='L38' /><em class='brace'>}</em> <a href='../R/18.html' title='Multiple refered from 6 places.'>sCCFResult</a>;
+<a id='L39' name='L39' />
+<a id='L40' name='L40' /><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <em class='brace'>{</em>
+<a id='L41' name='L41' />    <strong class='reserved'>double</strong> x;
+<a id='L42' name='L42' />    <strong class='reserved'>double</strong> y;
+<a id='L43' name='L43' />    <strong class='reserved'>double</strong> z;
+<a id='L44' name='L44' /><em class='brace'>}</em> <a href='../R/17.html' title='Multiple refered from 2 places.'>sAnswers</a>;
+<a id='L45' name='L45' />
+<a id='L46' name='L46' />
+<a id='L47' name='L47' />@protocol EstimaCalculatorDelegate;
+<a id='L48' name='L48' />
+<a id='L49' name='L49' />@interface EstimaCalculator : NSObject &lt;AudioInputBufferDelegate&gt; <em class='brace'>{</em>
+<a id='L50' name='L50' />
+<a id='L51' name='L51' />@private
+<a id='L52' name='L52' />    __weak id&lt;EstimaCalculatorDelegate&gt; _delegate;
+<a id='L53' name='L53' />
+<a id='L54' name='L54' />    <strong class='reserved'>float</strong> *_interpolatedDataO;
+<a id='L55' name='L55' />    <strong class='reserved'>float</strong> *_interpolatedDataA;
+<a id='L56' name='L56' />    <strong class='reserved'>float</strong> *_interpolatedDataB;
+<a id='L57' name='L57' />    <strong class='reserved'>float</strong> *_interpolatedDataC;
+<a id='L58' name='L58' />
+<a id='L59' name='L59' />    <a href='../S/21.html#L38' title='Defined at 38 in Estima/EstimaCalculator.h.'>sCCFResult</a> _resultOtoA;
+<a id='L60' name='L60' />    <a href='../S/21.html#L38' title='Defined at 38 in Estima/EstimaCalculator.h.'>sCCFResult</a> _resultOtoB;
+<a id='L61' name='L61' />    <a href='../S/21.html#L38' title='Defined at 38 in Estima/EstimaCalculator.h.'>sCCFResult</a> _resultOtoC;
+<a id='L62' name='L62' />
+<a id='L63' name='L63' />    BOOL  _isCalculating;
+<a id='L64' name='L64' />    BOOL  _isTest;
+<a id='L65' name='L65' />    dispatch_queue_t _inputQueue;
+<a id='L66' name='L66' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> _count;
+<a id='L67' name='L67' /><em class='brace'>}</em>
+<a id='L68' name='L68' />
+<a id='L69' name='L69' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(weak)     id&lt;EstimaCalculatorDelegate&gt; delegate;
+<a id='L70' name='L70' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>           BOOL                         isCaluculating;
+<a id='L71' name='L71' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>                 baseNumberOfSamples;
+<a id='L72' name='L72' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>                 responseNumberOfSamples;
+<a id='L73' name='L73' />
+<a id='L74' name='L74' />- (<strong class='reserved'>void</strong>)calculateWithABL:(AudioBufferList *)bufferList;
+<a id='L75' name='L75' />
+<a id='L76' name='L76' />- (<strong class='reserved'>void</strong>)interpolateWithData:(<strong class='reserved'>float</strong> *)baseData
+<a id='L77' name='L77' />               responseData:(<strong class='reserved'>float</strong> *)resData;
+<a id='L78' name='L78' />
+<a id='L79' name='L79' /><em class='comment'>//</em>
+<a id='L80' name='L80' />- (<strong class='reserved'>void</strong>)calcGreatCCFWithBaseData:(<strong class='reserved'>float</strong> *)baseData
+<a id='L81' name='L81' />                         subData:(<strong class='reserved'>float</strong> *)subData
+<a id='L82' name='L82' />                          result:(<a href='../S/21.html#L38' title='Defined at 38 in Estima/EstimaCalculator.h.'>sCCFResult</a> *)result
+<a id='L83' name='L83' />                            name:(NSString *)name;
+<a id='L84' name='L84' />
+<a id='L85' name='L85' />
+<a id='L86' name='L86' />- (<strong class='reserved'>void</strong>)calcCCFWithData:(<strong class='reserved'>double</strong> *)baseData
+<a id='L87' name='L87' />                subData:(<strong class='reserved'>double</strong> *)subData
+<a id='L88' name='L88' />                 result:(<a href='../S/21.html#L38' title='Defined at 38 in Estima/EstimaCalculator.h.'>sCCFResult</a> *)result
+<a id='L89' name='L89' />                   name:(NSString *)name;
+<a id='L90' name='L90' />
+<a id='L91' name='L91' />- (<strong class='reserved'>void</strong>)estimate:(<a href='../S/21.html#L44' title='Defined at 44 in Estima/EstimaCalculator.h.'>sAnswers</a> *)ans;
+<a id='L92' name='L92' />
+<a id='L93' name='L93' />- (<strong class='reserved'>void</strong>)dumpCCFResult:(<a href='../S/21.html#L38' title='Defined at 38 in Estima/EstimaCalculator.h.'>sCCFResult</a> *)result withName:(NSString *)name;
+<a id='L94' name='L94' />
+<a id='L95' name='L95' />@end
+<a id='L96' name='L96' />
+<a id='L97' name='L97' />@protocol EstimaCalculatorDelegate &lt;NSObject&gt;
+<a id='L98' name='L98' />@required
+<a id='L99' name='L99' />- (<strong class='reserved'>void</strong>)didCalculated:(EstimaCalculator *)calculator
+<a id='L100' name='L100' />          withAnswers:(<a href='../S/21.html#L44' title='Defined at 44 in Estima/EstimaCalculator.h.'>sAnswers</a>)answers
+<a id='L101' name='L101' />             countNum:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)num;
+<a id='L102' name='L102' />@end
+<a id='L103' name='L103' />
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM' />
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

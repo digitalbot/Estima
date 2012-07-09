@@ -45,12 +45,12 @@ typedef enum {
     // datas
     double *_data;                      // data (L)
     double *_dataR;                     // data (R)
-    
+
     // not in specifications
     unsigned int   _numberOfSamples;    // number of samples (apiece)
     unsigned int   _bytesPerSample;     // bits rate / 8
     double         _bufAbsLimit;        // for inverse internalize
-    
+
 }
 
 // property
@@ -64,7 +64,7 @@ typedef enum {
 @property(readonly) double *data;
 @property(readonly) double *dataR;
 
-@property(readonly) unsigned int   numberOfSamples;
+@property(readonly) unsigned int numberOfSamples;
 @property(readonly) unsigned int bytesPerSample;
 @property(readonly) double       bufAbsLimit;
 

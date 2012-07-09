@@ -15,7 +15,7 @@
 #import "EstimaCalculator.h"
 #import "Utils.h"
 
-#define kIntervalTime 0.5
+#define kIntervalTime 0.2
 
 
 @interface AppController : NSObject <NSWindowDelegate, EstimaCalculatorDelegate> {

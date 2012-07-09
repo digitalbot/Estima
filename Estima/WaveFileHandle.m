@@ -96,9 +96,9 @@
         fread(&_bitsPerSample, sizeof(_bitsPerSample), 1, pWavFile);
 
         // utility data
-        _bytesPerSample = _bitsPerSample / 8; 
+        _bytesPerSample = _bitsPerSample / 8;
         _bufAbsLimit    = (1 << _bitsPerSample) / 2;
-        
+
         // set offset (default 36)
         _offset = (int)ftell(pWavFile);
 
@@ -153,7 +153,7 @@
                     }
                 }
                 break;
-                
+
             case 16:
                 for (int i=0; i<_numberOfSamples; i++) {
                     fread(&buf, _bytesPerSample, 1 , pWavFile);
@@ -164,7 +164,7 @@
                     }
                 }
                 break;
-                
+
             case 32:
                 // ieee float
                 if (_formatTag == 3) {
@@ -194,7 +194,7 @@
                     return nil;
                 }
                 break;
-                
+
             default:
                 printf("[ERROR]: This handle can not open this bit rate.\n");
                 fclose(pWavFile);
@@ -226,12 +226,12 @@
             case 64:
                 wFormatTag = 3;
                 break;
-                
+
             default:
                 wFormatTag = 1;
                 break;
         }
-        
+
         _offset           = 36;
         _sizeOfFMT        = 16;
         _formatTag        = wFormatTag;
@@ -239,15 +239,15 @@
         _numberOfSamples  = numOfSamples;
         _bitsPerSample    = bitsPerSample;
         _samplesPerSec    = samplesPerSec;
-        
+
         _bytesPerSample   = _bitsPerSample / 8;
         _bufAbsLimit      = (1 << _bitsPerSample) / 2;
-        
+
         _sizeOfBlock      = _numberOfChannels * _bytesPerSample;
         _sizeOfRIFF       = _numberOfSamples * _sizeOfBlock + _offset - 8;
         _bytesPerSec      = _samplesPerSec * _sizeOfBlock;
         _sizeOfData       = _sizeOfBlock * _numberOfSamples;
-        
+
         _data = calloc(_numberOfSamples, sizeof(double));
         if (![self checkAllocated:_data]) {
             return nil;
@@ -281,19 +281,19 @@
                     _data[i] = (double)((char *)inData)[i];
                 }
                 break;
-                
+
             case kIsShort:
                 for (int i=0; i<numOfSamples; i++) {
                     _data[i] = (double)((short *)inData)[i];
                 }
                 break;
-                
+
             case kIsFloat:
                 for (int i=0; i<numOfSamples; i++) {
                     _data[i] = (double)((float *)inData)[i];
                 }
                 break;
-                
+
             case kIsDouble:
                 for (int i=0; i<numOfSamples; i++) {
                     _data[i] = ((double *)inData)[i];
@@ -327,28 +327,28 @@
                     _dataR[i] = (double)((char *)inDataR)[i];
                 }
                 break;
-                
+
             case kIsShort:
                 for (int i=0; i<numOfSamples; i++) {
                     _data[i]  = (double)((short *)inData)[i];
                     _dataR[i] = (double)((short *)inDataR)[i];
                 }
                 break;
-                
+
             case kIsFloat:
                 for (int i=0; i<numOfSamples; i++) {
                     _data[i]  = (double)((float *)inData)[i];
                     _dataR[i] = (double)((float *)inDataR)[i];
                 }
                 break;
-                
+
             case kIsDouble:
                 for (int i=0; i<numOfSamples; i++) {
                     _data[i]  = ((double *)inData)[i];
                     _dataR[i] = ((double *)inDataR)[i];
                 }
                 break;
-                
+
             default:
                 printf("[ERROR]: Call other init method.\n");
                 return nil;
@@ -531,7 +531,7 @@
         }
         tmp = YES;
         isInternalized = &tmp;
-        
+
     }
     return YES;
 }
@@ -608,7 +608,7 @@
                 }
             }
             break;
-            
+
         default:
             printf("[ERROR]: This bit rate is not known.\n");
     }
@@ -666,7 +666,7 @@
     if (max <= 1.0) {
         return;
     }
-    
+
     if (MONORAL) {
         for (int i=0; i<_numberOfSamples; i++) {
             _data[i] /= _bufAbsLimit;
@@ -823,6 +823,5 @@
         }
     }
 }
-
 
 @end

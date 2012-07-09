@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Estima/RingBuffer.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.0' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP' /><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/38.html'>Estima</a>/RingBuffer.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<pre>
+<a id='L1' name='L1' /><em class='comment'>//</em>
+<a id='L2' name='L2' /><em class='comment'>//  RingBuffer.h</em>
+<a id='L3' name='L3' /><em class='comment'>//  Estima</em>
+<a id='L4' name='L4' /><em class='comment'>//</em>
+<a id='L5' name='L5' /><em class='comment'>//  Created by kosuke nakamura on 12/01/03.</em>
+<a id='L6' name='L6' /><em class='comment'>//  Copyright (c) 2012年 kosuke nakamura. All rights reserved.</em>
+<a id='L7' name='L7' /><em class='comment'>//</em>
+<a id='L8' name='L8' />
+<a id='L9' name='L9' /><em class='sharp'>#import</em> &lt;Foundation/Foundation.h&gt;
+<a id='L10' name='L10' /><em class='sharp'>#import</em> &lt;Carbon/Carbon.h&gt;
+<a id='L11' name='L11' /><em class='sharp'>#import</em> &lt;CoreAudio/CoreAudio.h&gt;
+<a id='L12' name='L12' /><em class='sharp'>#import</em> "<a href='28.html'>Utils.h</a>"
+<a id='L13' name='L13' />
+<a id='L14' name='L14' />
+<a id='L15' name='L15' /><em class='sharp'>#define</em> <a href='../R/14.html' title='Multiple refered from 2 places.'>kTimeBoundsQueueSize</a> 32
+<a id='L16' name='L16' /><em class='sharp'>#define</em> kTimeBoundsQueueMask ((<a href='../S/26.html#L15' title='Defined at 15 in Estima/RingBuffer.h.'>kTimeBoundsQueueSize</a>) - 1)
+<a id='L17' name='L17' />
+<a id='L18' name='L18' /><strong class='reserved'>typedef</strong> <strong class='reserved'>int</strong> <a href='../R/2.html' title='Multiple refered from 3 places.'>RingBufferError</a>;
+<a id='L19' name='L19' /><strong class='reserved'>typedef</strong> <strong class='reserved'>long</strong> <a href='../R/3.html' title='Multiple refered from 8 places.'>SampleTime</a>;
+<a id='L20' name='L20' /><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <em class='brace'>{</em>
+<a id='L21' name='L21' />    <strong class='reserved'>volatile</strong> <a href='../S/26.html#L19' title='Defined at 19 in Estima/RingBuffer.h.'>SampleTime</a>   mStartTime;
+<a id='L22' name='L22' />    <strong class='reserved'>volatile</strong> <a href='../S/26.html#L19' title='Defined at 19 in Estima/RingBuffer.h.'>SampleTime</a>   mEndTime;
+<a id='L23' name='L23' />    <strong class='reserved'>volatile</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> mUpdateCounter;
+<a id='L24' name='L24' /><em class='brace'>}</em> <a href='../S/26.html#L45' title='Refered from 45 in Estima/RingBuffer.h.'>sTimeBounds</a>;
+<a id='L25' name='L25' />
+<a id='L26' name='L26' /><strong class='reserved'>enum</strong> <em class='brace'>{</em>
+<a id='L27' name='L27' />        kRingBufferError_WayBehind      = -2, <em class='comment'>// 格納されているバッファより前を指定</em>
+<a id='L28' name='L28' />        kRingBufferError_SlightlyBehind = -1, <em class='comment'>// バッファより少しだけ前を指定</em>
+<a id='L29' name='L29' />        kRingBufferError_OK             = 0,  <em class='comment'>// ＯＫ</em>
+<a id='L30' name='L30' />        kRingBufferError_SlightlyAhead  = 1,  <em class='comment'>// バッファより少しだけ後ろを指定</em>
+<a id='L31' name='L31' />        kRingBufferError_WayAhead       = 2,  <em class='comment'>// バッファより後ろを指定</em>
+<a id='L32' name='L32' />        kRingBufferError_TooMuch        = 3,  <em class='comment'>// バッファ容量を超えて指定</em>
+<a id='L33' name='L33' />    kRingBufferError_CPUOverload    = 4   <em class='comment'>// CPUオーバーロード</em>
+<a id='L34' name='L34' /><em class='brace'>}</em>;
+<a id='L35' name='L35' />
+<a id='L36' name='L36' />
+<a id='L37' name='L37' />@interface RingBuffer : NSObject <em class='brace'>{</em>
+<a id='L38' name='L38' />    <strong class='reserved'>char</strong>         **_datas;
+<a id='L39' name='L39' />    <strong class='reserved'>short</strong>        _numberOfChannels;
+<a id='L40' name='L40' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> _bytesPerFrame;
+<a id='L41' name='L41' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> _capacityFrames;
+<a id='L42' name='L42' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> _capacityFramesMask;
+<a id='L43' name='L43' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> _capacityBytes;
+<a id='L44' name='L44' />
+<a id='L45' name='L45' />    <a href='../S/26.html#L24' title='Defined at 24 in Estima/RingBuffer.h.'>sTimeBounds</a>  _timeBoundsQueue[<a href='../S/26.html#L15' title='Defined at 15 in Estima/RingBuffer.h.'>kTimeBoundsQueueSize</a>];
+<a id='L46' name='L46' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> _timeBoundsQueuePtr;
+<a id='L47' name='L47' /><em class='brace'>}</em>
+<a id='L48' name='L48' />
+<a id='L49' name='L49' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <a href='../S/26.html#L19' title='Defined at 19 in Estima/RingBuffer.h.'>SampleTime</a> startTime;
+<a id='L50' name='L50' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <a href='../S/26.html#L19' title='Defined at 19 in Estima/RingBuffer.h.'>SampleTime</a> endTime;
+<a id='L51' name='L51' />
+<a id='L52' name='L52' />
+<a id='L53' name='L53' />- (id)initWithNumberOfChannels:(<strong class='reserved'>short</strong>)numOfChannels
+<a id='L54' name='L54' />                     frameSize:(<strong class='reserved'>int</strong>)bytesPerFrame
+<a id='L55' name='L55' />                capacityFrames:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)capacityFrames;
+<a id='L56' name='L56' />
+<a id='L57' name='L57' />- (<a href='../S/26.html#L18' title='Defined at 18 in Estima/RingBuffer.h.'>RingBufferError</a>)storeInBuffer:(AudioBufferList *)abl
+<a id='L58' name='L58' />                      sampleTime:(<a href='../S/26.html#L19' title='Defined at 19 in Estima/RingBuffer.h.'>SampleTime</a>)startWrite
+<a id='L59' name='L59' />                     numOfFrames:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)framesToWrite;
+<a id='L60' name='L60' />
+<a id='L61' name='L61' />- (<a href='../S/26.html#L18' title='Defined at 18 in Estima/RingBuffer.h.'>RingBufferError</a>)fetchFromBuffer:(AudioBufferList *)abl
+<a id='L62' name='L62' />                      inSampleTime:(<a href='../S/26.html#L19' title='Defined at 19 in Estima/RingBuffer.h.'>SampleTime</a>)startWrite
+<a id='L63' name='L63' />                       numOfFrames:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)framesToRead;
+<a id='L64' name='L64' />
+<a id='L65' name='L65' />- (<a href='../S/26.html#L18' title='Defined at 18 in Estima/RingBuffer.h.'>RingBufferError</a>)timeBoundsInStartTime:(<a href='../S/26.html#L19' title='Defined at 19 in Estima/RingBuffer.h.'>SampleTime</a> *)startTime
+<a id='L66' name='L66' />                                 endTime:(<a href='../S/26.html#L19' title='Defined at 19 in Estima/RingBuffer.h.'>SampleTime</a> *)endTime;
+<a id='L67' name='L67' />
+<a id='L68' name='L68' />- (<strong class='reserved'>void</strong>)dumpData;
+<a id='L69' name='L69' />
+<a id='L70' name='L70' />@end
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM' />
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

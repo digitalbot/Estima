@@ -1,0 +1,144 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Estima/WaveFileHandle.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.0' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP' /><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/38.html'>Estima</a>/WaveFileHandle.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<pre>
+<a id='L1' name='L1' /><em class='comment'>//</em>
+<a id='L2' name='L2' /><em class='comment'>//  WaveFileHandle.h</em>
+<a id='L3' name='L3' /><em class='comment'>//  Estima</em>
+<a id='L4' name='L4' /><em class='comment'>//</em>
+<a id='L5' name='L5' /><em class='comment'>//  Created by kosuke nakamura on 11/12/04.</em>
+<a id='L6' name='L6' /><em class='comment'>//  Copyright (c) 2011年 kosuke nakamura. All rights reserved.</em>
+<a id='L7' name='L7' /><em class='comment'>//</em>
+<a id='L8' name='L8' />
+<a id='L9' name='L9' /><em class='sharp'>#import</em> &lt;Foundation/Foundation.h&gt;
+<a id='L10' name='L10' />
+<a id='L11' name='L11' /><em class='sharp'>#define</em> MONORAL (_numberOfChannels == 1)
+<a id='L12' name='L12' /><em class='sharp'>#define</em> STEREO (_numberOfChannels == 2)
+<a id='L13' name='L13' />
+<a id='L14' name='L14' /><strong class='reserved'>typedef</strong> <strong class='reserved'>enum</strong> <em class='brace'>{</em>
+<a id='L15' name='L15' />    kIsChar   = 8,
+<a id='L16' name='L16' />    kIsShort  = 16,
+<a id='L17' name='L17' />    kIsFloat  = 32,
+<a id='L18' name='L18' />    kIsDouble = 64,
+<a id='L19' name='L19' /><em class='brace'>}</em> <a href='../R/5.html' title='Multiple refered from 8 places.'>eDataTypes</a>;
+<a id='L20' name='L20' /><em class='comment'>//const double kNormalizedRatio = 0.8;</em>
+<a id='L21' name='L21' />
+<a id='L22' name='L22' />@interface WaveFileHandle : NSObject <em class='brace'>{</em>
+<a id='L23' name='L23' />
+<a id='L24' name='L24' />@private
+<a id='L25' name='L25' />
+<a id='L26' name='L26' />    <em class='comment'>// RIFF and WAVE chunk</em>
+<a id='L27' name='L27' />    <strong class='reserved'>char</strong>           _fileTypeTag[4];     <em class='comment'>// 'RIFF'</em>
+<a id='L28' name='L28' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   _sizeOfRIFF;         <em class='comment'>// File size - 8</em>
+<a id='L29' name='L29' />    <strong class='reserved'>char</strong>           _riffTypeTag[4];     <em class='comment'>// 'WAVE'</em>
+<a id='L30' name='L30' />
+<a id='L31' name='L31' />    <em class='comment'>// fmt chunk</em>
+<a id='L32' name='L32' />    <strong class='reserved'>char</strong>           _fmtChunkTag[4];     <em class='comment'>// 'fmt '</em>
+<a id='L33' name='L33' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   _sizeOfFMT;          <em class='comment'>// 16 (PCM)</em>
+<a id='L34' name='L34' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> _formatTag;          <em class='comment'>//  1 (PCM)</em>
+<a id='L35' name='L35' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> _numberOfChannels;   <em class='comment'>// number of channel</em>
+<a id='L36' name='L36' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   _samplesPerSec;      <em class='comment'>// sampling frequency (numberOfsamples / second)</em>
+<a id='L37' name='L37' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   _bytesPerSec;        <em class='comment'>// speed of data (sizeOfblock * numberOfchannels)</em>
+<a id='L38' name='L38' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> _sizeOfBlock;        <em class='comment'>// block size (bitsPerSample / numberOfchannels)</em>
+<a id='L39' name='L39' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> _bitsPerSample;      <em class='comment'>// quantization bit rate (8, 16, 24, 32)</em>
+<a id='L40' name='L40' />
+<a id='L41' name='L41' />    <em class='comment'>// data chunk</em>
+<a id='L42' name='L42' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   _offset;             <em class='comment'>// starting position of data chunk</em>
+<a id='L43' name='L43' />    <strong class='reserved'>char</strong>           _dataChunkTag[4];    <em class='comment'>// 'data'</em>
+<a id='L44' name='L44' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   _sizeOfData;         <em class='comment'>// data size</em>
+<a id='L45' name='L45' />    <em class='comment'>// datas</em>
+<a id='L46' name='L46' />    <strong class='reserved'>double</strong> *_data;                      <em class='comment'>// data (L)</em>
+<a id='L47' name='L47' />    <strong class='reserved'>double</strong> *_dataR;                     <em class='comment'>// data (R)</em>
+<a id='L48' name='L48' />    
+<a id='L49' name='L49' />    <em class='comment'>// not in specifications</em>
+<a id='L50' name='L50' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   _numberOfSamples;    <em class='comment'>// number of samples (apiece)</em>
+<a id='L51' name='L51' />    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   _bytesPerSample;     <em class='comment'>// bits rate / 8</em>
+<a id='L52' name='L52' />    <strong class='reserved'>double</strong>         _bufAbsLimit;        <em class='comment'>// for inverse internalize</em>
+<a id='L53' name='L53' />    
+<a id='L54' name='L54' /><em class='brace'>}</em>
+<a id='L55' name='L55' />
+<a id='L56' name='L56' /><em class='comment'>// property</em>
+<a id='L57' name='L57' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> numberOfChannels;
+<a id='L58' name='L58' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   samplesPerSec;
+<a id='L59' name='L59' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   bytesPerSec;
+<a id='L60' name='L60' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> sizeOfBlock;
+<a id='L61' name='L61' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> bitsPerSample;
+<a id='L62' name='L62' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   sizeOfData;
+<a id='L63' name='L63' />
+<a id='L64' name='L64' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>double</strong> *data;
+<a id='L65' name='L65' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>double</strong> *dataR;
+<a id='L66' name='L66' />
+<a id='L67' name='L67' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>   numberOfSamples;
+<a id='L68' name='L68' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> bytesPerSample;
+<a id='L69' name='L69' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>double</strong>       bufAbsLimit;
+<a id='L70' name='L70' />
+<a id='L71' name='L71' />@<a href='../S/6.html#L71' title='Defined at 71 in Estima/AudioDataHandle.h.'>property</a>(readonly) <strong class='reserved'>double</strong>       playTime;
+<a id='L72' name='L72' />
+<a id='L73' name='L73' />
+<a id='L74' name='L74' /><em class='comment'>// initialize</em>
+<a id='L75' name='L75' />- (id)initWithFile:(NSString *)fFilePath;
+<a id='L76' name='L76' />
+<a id='L77' name='L77' />- (id)initWithNumberOfSamples:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)numOfSamples
+<a id='L78' name='L78' />                numOfChannels:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong>)ch
+<a id='L79' name='L79' />                samplesPerSec:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)samplesPerSec
+<a id='L80' name='L80' />                bitsPerSample:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong>)bitsPerSample;
+<a id='L81' name='L81' />
+<a id='L82' name='L82' />- (id)initMonoWithData:(<strong class='reserved'>void</strong> *)inData
+<a id='L83' name='L83' />              dataType:(<a href='../D/11.html' title='Multiple defined in 2 places.'>eDataTypes</a>)dataType
+<a id='L84' name='L84' />          numOfSamples:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)numOfSamples
+<a id='L85' name='L85' />         samplesPerSec:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)samplesPerSec;
+<a id='L86' name='L86' />
+<a id='L87' name='L87' />- (id)initStereoWithData:(<strong class='reserved'>void</strong> *)inData
+<a id='L88' name='L88' />               withDataR:(<strong class='reserved'>void</strong> *)inDataR
+<a id='L89' name='L89' />                dataType:(<a href='../D/11.html' title='Multiple defined in 2 places.'>eDataTypes</a>)dataType
+<a id='L90' name='L90' />            numOfSamples:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)numOfSamples
+<a id='L91' name='L91' />           samplesPerSec:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)samplesPerSec;
+<a id='L92' name='L92' />
+<a id='L93' name='L93' /><em class='comment'>// write to file</em>
+<a id='L94' name='L94' />- (<strong class='reserved'>void</strong>)writeToFile:(NSString *)tFilePath;
+<a id='L95' name='L95' />
+<a id='L96' name='L96' /><em class='comment'>// access to sample</em>
+<a id='L97' name='L97' />- (<strong class='reserved'>double</strong>)access:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)index;
+<a id='L98' name='L98' />- (<strong class='reserved'>double</strong>)accessR:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)index;
+<a id='L99' name='L99' />- (<strong class='reserved'>void</strong>)access:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)index setData:(<strong class='reserved'>double</strong>)sData;
+<a id='L100' name='L100' />- (<strong class='reserved'>void</strong>)accessR:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)index setData:(<strong class='reserved'>double</strong>)sData;
+<a id='L101' name='L101' />
+<a id='L102' name='L102' /><em class='comment'>// add data</em>
+<a id='L103' name='L103' />- (<strong class='reserved'>void</strong>)pushData:(<strong class='reserved'>void</strong> *)aData
+<a id='L104' name='L104' />        dataType:(<a href='../D/11.html' title='Multiple defined in 2 places.'>eDataTypes</a>)dataType
+<a id='L105' name='L105' />     numOfAdding:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)numOfAddSamples;
+<a id='L106' name='L106' />
+<a id='L107' name='L107' />- (<strong class='reserved'>void</strong>)pushData:(<strong class='reserved'>void</strong> *)aData
+<a id='L108' name='L108' />       withDataR:(<strong class='reserved'>void</strong> *)aDataR
+<a id='L109' name='L109' />        dataType:(<a href='../D/11.html' title='Multiple defined in 2 places.'>eDataTypes</a>)dataType
+<a id='L110' name='L110' />     numOfAdding:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)numOfAddSamples;
+<a id='L111' name='L111' />
+<a id='L112' name='L112' /><em class='comment'>// dump</em>
+<a id='L113' name='L113' />- (<strong class='reserved'>void</strong>)showHeader:(NSString *)name;
+<a id='L114' name='L114' />- (<strong class='reserved'>void</strong>)showSamples;
+<a id='L115' name='L115' />
+<a id='L116' name='L116' /><em class='comment'>// operation</em>
+<a id='L117' name='L117' />- (<strong class='reserved'>void</strong>)internalize;
+<a id='L118' name='L118' />- (<strong class='reserved'>void</strong>)normalizeWithGain:(<strong class='reserved'>double</strong>)gain;
+<a id='L119' name='L119' />- (<strong class='reserved'>void</strong>)changeNumberOfSamples:(<strong class='reserved'>int</strong>)numOfSamples;
+<a id='L120' name='L120' />- (<strong class='reserved'>void</strong>)monolize;
+<a id='L121' name='L121' />- (<strong class='reserved'>void</strong>)unshiftSilentSamples:(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)numOfSamples;
+<a id='L122' name='L122' />- (<strong class='reserved'>void</strong>)allClear;
+<a id='L123' name='L123' />
+<a id='L124' name='L124' />@end
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM' />
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

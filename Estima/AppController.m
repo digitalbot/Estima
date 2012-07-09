@@ -116,6 +116,7 @@
         [_planeX setStringValue:[NSString stringWithFormat:@"X: %f", answers.x]];
         [_planeY setStringValue:[NSString stringWithFormat:@"Y: %f", answers.y]];
         [_planeZ setStringValue:[NSString stringWithFormat:@"Z: %f", answers.z]];
+        NSLog(@"<%d>ALL DANE IN MAIN QUEUE: %f", num, since);
     });
     
     return;

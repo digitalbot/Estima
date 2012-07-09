@@ -23,6 +23,27 @@
 - (unsigned int)responseNumberOfSamples {
     return (self.baseNumberOfSamples * pow(2, kPowerNumberOfTwo));
 }
+@dynamic baseLog2n;
+- (unsigned int)baseLog2n {
+    return (int)log2(self.baseNumberOfSamples);
+}
+@dynamic usingRange;
+- (unsigned int)usingRange {
+    return (NextPowerOfTwo(kLimitSample * kComp) * 2);
+}
+@dynamic upedRange;
+- (unsigned int)upedRange {
+    return (self.usingRange * pow(2.0, kPowerNumberOfTwo));
+}
+@dynamic usingLog2n;
+- (unsigned int)usingLog2n {
+    return log2(self.usingRange);
+}
+@dynamic upedLog2n;
+- (unsigned int)upedLog2n {
+    return log2(self.upedRange);
+}
+
 
 
 #pragma mark - initialize
@@ -31,13 +52,11 @@
     self = [super init];
     if (self) {
         //
-        unsigned int bNumOfSamples = self.baseNumberOfSamples;
-        int bLog2n = log2(bNumOfSamples);
-
-        _fftBaseSetup = vDSP_create_fftsetupD(bLog2n, kFFTRadix2);
-        _fftSubSetup  = vDSP_create_fftsetupD(bLog2n, kFFTRadix2);
-        
-        _fftResSetup  = vDSP_create_fftsetupD(bLog2n, kFFTRadix2);
+        _fftBaseSetup  = vDSP_create_fftsetupD(self.baseLog2n, kFFTRadix2);
+        _fftSubSetup   = vDSP_create_fftsetupD(self.baseLog2n, kFFTRadix2);
+        _fftResSetup   = vDSP_create_fftsetupD(self.baseLog2n, kFFTRadix2);
+        _fftUsingSetup = vDSP_create_fftsetupD(self.usingLog2n, kFFTRadix2);
+        _fftUpedSetup  = vDSP_create_fftsetupD(self.upedLog2n, kFFTRadix2);
         //
 
         /*
@@ -46,7 +65,7 @@
         _interpolatedDataB = MEM_CALLOC(self.responseNumberOfSamples, sizeof(float));
         _interpolatedDataC = MEM_CALLOC(self.responseNumberOfSamples, sizeof(float));
         */
-        _inputQueue = dispatch_queue_create("EstimaCalculator", NULL);//dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        _inputQueue = dispatch_queue_create("EstimaCalculator", NULL);
 
         _resultOtoA.max = 0.0;
         _resultOtoB.max = 0.0;
@@ -63,10 +82,14 @@
     vDSP_destroy_fftsetupD(_fftBaseSetup); ///
     vDSP_destroy_fftsetupD(_fftSubSetup); ///
     vDSP_destroy_fftsetupD(_fftResSetup); ///
+    vDSP_destroy_fftsetupD(_fftUsingSetup); ///
+    vDSP_destroy_fftsetupD(_fftUpedSetup); ///
+    /*
     free(_interpolatedDataO);
     free(_interpolatedDataA);
     free(_interpolatedDataB);
     free(_interpolatedDataC);
+     */
     free(_bufferO);
     free(_bufferA);
     free(_bufferB);
@@ -92,32 +115,163 @@
 
         // debug
         if (_isTest) {
+            //_isTest = NO;
             // debug ccffft
+
+            FFTSetupD testBaseSetup = vDSP_create_fftsetupD(5, kFFTRadix2);
+            FFTSetupD testResSetup = vDSP_create_fftsetupD(6, kFFTRadix2);
+            DSPDoubleSplitComplex testBaseComplex;
+            DSPDoubleSplitComplex testResComplex;
+            testBaseComplex.realp = MEM_CALLOC(32, sizeof(double));
+            testBaseComplex.imagp = MEM_CALLOC(32, sizeof(double));
+            testResComplex.realp = MEM_CALLOC(64, sizeof(double));
+            testResComplex.imagp = MEM_CALLOC(64, sizeof(double));
+            for (int i=0; i<32; i++) {
+                testBaseComplex.realp[i] = sin(i);//(double)i / 50.0;
+                testBaseComplex.imagp[i] = 0.0;
+            }
+            for (int i=0; i<32; i++) {
+                NSLog(@"%d: signal->%f\n", i, testBaseComplex.realp[i]);
+            }
+            vDSP_fft_zipD(testBaseSetup, &testBaseComplex, 1, 5, FFT_FORWARD);
+
+            NSLog(@" ");
+            NSLog(@"ffted\n");
+            for (int i=0; i<32; i++) {
+                NSLog(@"%d: real->%f imag->%f\n", i, testBaseComplex.realp[i], testBaseComplex.imagp[i]);
+            }
+            for (int i=0; i<16; i++) {
+                testResComplex.realp[i] = testBaseComplex.realp[i];
+                testResComplex.imagp[i] = testBaseComplex.imagp[i];
+            }
+            for (int i=48; i<64; i++) {
+                testResComplex.realp[i] = testBaseComplex.realp[i-32];
+                testResComplex.imagp[i] = testBaseComplex.imagp[i-32];
+            }
+
+            NSLog(@" ");
+            NSLog(@"dainyuu\n");
+            for (int i=0; i<64; i++) {
+                NSLog(@"%d: real->%f imag->%f\n", i, testResComplex.realp[i], testResComplex.imagp[i]);
+            }
+
+            NSLog(@" ");
+            NSLog(@"interped");
+            vDSP_fft_zipD(testResSetup, &testResComplex, 1, 6, FFT_INVERSE);
+            for (int i=0; i<64; i++) {
+                NSLog(@"%d: real->%f imag->%f\n", i, testResComplex.realp[i] / 32, testResComplex.imagp[i] / 32);
+            }
+
+
+            free(testBaseComplex.realp);
+            free(testBaseComplex.imagp);
+            vDSP_destroy_fftsetupD(testBaseSetup);
+            free(testResComplex.realp);
+            free(testResComplex.imagp);
+            vDSP_destroy_fftsetupD(testResSetup);
+            return;
+
+
             AudioDataHandle *baseData
             = [[AudioDataHandle alloc] initWithWavFile:@"/Users/kosuke/Downloads/1013_cross_base_mono.wav"];
-            AudioDataHandle *subData
-            = [[AudioDataHandle alloc] initWithWavFile:@"/Users/kosuke/Downloads/1013_cross_sub_mono.wav"];
-
-            float *floatBase = MEM_CALLOC(_numberOfFrames, sizeof(float));
-            float *floatSub  = MEM_CALLOC(_numberOfFrames, sizeof(float));
-            for (int i=0; i<_numberOfFrames; i++) {
-                floatBase[i] = [baseData access:0 atIndex:i];
-                floatSub[i] = [subData access:0 atIndex:i];
+            FILE *bfp = fopen("/Users/kosuke/Acoust/ccf0203/wav_behind13thanBase_2.csv", "w");
+            unsigned int count        = 96000;
+            unsigned int limit_sample = 15;
+            int zure                  = 13;
+            unsigned int range        = limit_sample * 2; //30 = 15 * 2 (0 ~ 29)
+            unsigned int area_max     = limit_sample;     //15
+            unsigned int area_min     = limit_sample - 1; //14
+            unsigned int start_point  = limit_sample; //15
+            double *base = MEM_CALLOC(count, sizeof(double));
+            double *sub  = MEM_CALLOC(count, sizeof(double));
+            for (int i=1000; i<count+1000; i++) {
+                base[i-1000] = [baseData access:0 atIndex:i];
+                sub[i-1000]  = [baseData access:0 atIndex:i+zure];
+                fprintf(bfp, "%f, %f\n", (i - 1000) * 0.0000104167, sub[i-1000]);
             }
-            
-            AudioBufferList *buf;
-            buf = createAudioBufferList(2, _numberOfFrames * 4);
-            buf->mBuffers[0].mData = floatBase;
-            buf->mBuffers[1].mData = floatSub;
-            [self neoCalcWithABL:buf];
-            removeAudioBufferList(buf);
-            
-            _isTest = NO;
+            fclose(bfp);
+            stCCFResult result;
+            result.max = 0.0;
+            result.indexOfMax = 0;
+            double *results = MEM_CALLOC(range, sizeof(double));
+
+            FILE *fp = fopen("/Users/kosuke/Acoust/ccf0203/ccf_behind13thanBase_2.csv", "w");
+            for (int i=0; i<range; i++) {
+                double tempBase = 0.0;
+                double tempSub  = 0.0;
+                for (int j=start_point; j<count; j++) {
+                    results[i] += base[i+j-start_point] * sub[j];
+                    tempBase   += pow(base[i+j-start_point], 2.0);
+                    tempSub    += pow(sub[j], 2.0);
+                }
+                results[i] /= sqrt(tempBase * tempSub);
+                fprintf(fp, "%f %f\n", i * 0.0000104167, results[i]);
+                if (result.max < results[i]) {
+                    result.max = results[i];
+                    result.indexOfMax = i;
+                }
+            }
+            fclose(fp);
+
+            if (result.indexOfMax < limit_sample) {// index=k limit_sample=P
+                result.arrivalStatus    = kIsAheadSub;
+                result.arrivalSampleLag = result.indexOfMax - limit_sample; // area_min
+                result.arrivalTimeLag   = (double)result.arrivalSampleLag * kPerSample;
+            }
+            else if (result.indexOfMax == limit_sample) {
+                result.arrivalStatus    = kIsSame;
+                result.arrivalSampleLag = 0;
+                result.arrivalTimeLag   = 0.0;
+            }
+            else {
+                result.arrivalStatus    = kIsAheadBase;
+                result.arrivalSampleLag = result.indexOfMax - limit_sample; // area_max
+                result.arrivalTimeLag   = (double)result.arrivalSampleLag * kPerSample;
+            }
+
+            [self dumpCCFResult:&result withName:@"test"];
+            free(base);
+            free(sub);
+            free(results);
+
+
+//            AudioDataHandle *subData
+//            = [[AudioDataHandle alloc] initWithWavFile:@"/Users/kosuke/Downloads/1013_cross_sub_mono.wav"];
+//
+//            unsigned int range = 32;//self.baseNumberOfSamples;
+//            vDSP_Length baseLog2n = log2(range);
+//            FFTSetupD baseSetup = vDSP_create_fftsetupD(baseLog2n, kFFTRadix2);
+//            DSPDoubleSplitComplex baseComplex;
+//            baseComplex.realp = MEM_CALLOC(range, sizeof(double));
+//            baseComplex.imagp = MEM_CALLOC(range, sizeof(double));
+//            for (int i=0; i<range; i++) {
+//                baseComplex.realp[i] = [baseData access:0 atIndex:i];
+//            }
+//            /*
+//            AudioBufferList *buf;
+//            buf = createAudioBufferList(2, _numberOfFrames * 4);
+//            buf->mBuffers[0].mData = floatBase;
+//            buf->mBuffers[1].mData = floatSub;
+//            [self neoCalcWithABL:buf];
+//            removeAudioBufferList(buf);
+//             */
+//            NSLog(@"start");
+//            vDSP_fft_zipD(baseSetup, &baseComplex, 1, baseLog2n, FFT_FORWARD);
+//
+//            FILE *fp = fopen("/Users/kosuke/Acoust/fftTest.txt", "w");
+//            for (int i=0; i<range; i++) {
+//                double temp = sqrt(pow(baseComplex.realp[i], 2.0) + pow(baseComplex.imagp[i], 2.0));
+//                fprintf(fp, "%d %f\n", i, temp);
+//            }
+//            fclose(fp);
+
+            NSLog(@"done");
+            return;
         }
         //
 
         [self neoCalcWithABL:bufferList]; // 4
-        
+
         //[self newCalcWithABL:bufferList]; // 3
 
         //[self calcWithABL:bufferList]; // 1
@@ -133,7 +287,7 @@
 }
 
 - (void)neoCalcWithABL:(AudioBufferList *)bufferList {
-    
+
     NSDate *startTimeOfCalc = [NSDate date];
     NSTimeInterval since;
 
@@ -142,8 +296,8 @@
 
     float *dataO = (float *)bufferList->mBuffers[0].mData;
     float *dataA = (float *)bufferList->mBuffers[1].mData;
-    float *dataB = (float *)bufferList->mBuffers[2].mData;
-    float *dataC = (float *)bufferList->mBuffers[3].mData;
+    float *dataB = (float *)bufferList->mBuffers[2].mData;///
+    float *dataC = (float *)bufferList->mBuffers[3].mData;///
 
     if (_count == 1) {
         _bufferO = MEM_CALLOC(bufRange, sizeof(float));
@@ -163,10 +317,10 @@
                 _bufferC[i] =  dataC[i];
             }
             _pos += _numberOfFrames;
-            
+
             since = - [startTimeOfCalc timeIntervalSinceNow];
             NSLog(@"%d count <= rangeCount: %f", _count, since);
-            
+
             return;
         }
         else {
@@ -199,7 +353,7 @@
 
     since = - [startTimeOfCalc timeIntervalSinceNow];
     NSLog(@"%d start group: %f", _count, since);
-    
+
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     dispatch_group_t group = dispatch_group_create();
 
@@ -227,11 +381,11 @@
 
     since = - [startTimeOfCalc timeIntervalSinceNow];
     NSLog(@"%d end group: %f", _count, since);
-    
-    
-    [self dumpCCFResult:&_resultOtoA withName:@"OtoA"];
-    [self dumpCCFResult:&_resultOtoB withName:@"OtoB"];
-    [self dumpCCFResult:&_resultOtoC withName:@"OtoC"];
+
+
+    //[self dumpCCFResult:&_resultOtoA withName:@"OtoA"];
+    //[self dumpCCFResult:&_resultOtoB withName:@"OtoB"];
+    //[self dumpCCFResult:&_resultOtoC withName:@"OtoC"];
 
     /* check ccf error */
     if ((_resultOtoA.arrivalStatus
@@ -259,18 +413,16 @@
     NSTimeInterval since, temp;
     unsigned int num = _count;
 
-    result->max = 0;
+    result->max = 0.0;
     result->indexOfMax = 0;
 
     /* prepare */
     unsigned int bNumOfSamples = self.baseNumberOfSamples;
-    int bLog2n = log2(bNumOfSamples);
+    int bLog2n = self.baseLog2n;
 
     since = - [startTimeOfCCF timeIntervalSinceNow];
     NSLog(@"%d<%@>prepare first: %f", num, name, since - temp);
 
-    //FFTSetupD fftBaseSetup = vDSP_create_fftsetupD(bLog2n, kFFTRadix2);
-    //FFTSetupD fftSubSetup  = vDSP_create_fftsetupD(bLog2n, kFFTRadix2);
     DSPDoubleSplitComplex bComplex, sComplex;
 
     bComplex.realp = MEM_CALLOC(bNumOfSamples, sizeof(double));
@@ -278,19 +430,13 @@
     sComplex.realp = MEM_CALLOC(bNumOfSamples, sizeof(double));
     sComplex.imagp = MEM_CALLOC(bNumOfSamples, sizeof(double));
 
-    temp  = since;
-    since = - [startTimeOfCCF timeIntervalSinceNow];
-    NSLog(@"%d<%@>setuped: %f", num, name, since - temp);
+    //temp  = since;
+    //since = - [startTimeOfCCF timeIntervalSinceNow];
+    //NSLog(@"%d<%@>setuped: %f", num, name, since - temp);
 
     ///
-    const char *cName = [name UTF8String];
-    //char bdpath[100];
-    //sprintf(bdpath, "/Users/kosuke/Acoust/neo/wavs/base_%s_up%d_%d.txt", cName, (int)kPowerNumberOfTwo, num);
-    //char sdpath[100];
-    //sprintf(sdpath, "/Users/kosuke/Acoust/neo/wavs/sub_%s_up%d_%d.txt", cName, (int)kPowerNumberOfTwo, num);
-    
-    //FILE *bdp = fopen(bdpath, "w");
-    //FILE *sdp = fopen(sdpath, "w");
+    //const char *cName = [name UTF8String];
+    ///
 
     for (int i=0; i<bNumOfSamples; i++) {
         bComplex.realp[i] = (double)baseData[i+kOffset];
@@ -300,65 +446,48 @@
         sComplex.realp[i] = 0.0;
     }
 
-    /* test
-    for (int i=0; i<bNumOfSamples/2; i++) {
-        bComplex.realp[i] = (double)baseData[i+kOffset];
-    }
-    for (int i=0; i<bNumOfSamples/4; i++) {
-        sComplex.realp[i] = (double)subData[i+kLimitSample+kOffset];
-    }
-    */
-    //for (int i=0; i<4000; i++) {
-    //    fprintf(bdp, "%d %f\n", i, baseData[i+kOffset]);
-    //    fprintf(sdp, "%d %f\n", i, subData[i+kLimitSample+kOffset]); // -1?
-    //}
-    //fclose(bdp);
-    //fclose(sdp);
-    ///
-    
-    temp  = since;
-    since = - [startTimeOfCCF timeIntervalSinceNow];
-    NSLog(@"%d<%@>:substituted %f", num, name, since - temp);
+    //temp  = since;
+    //since = - [startTimeOfCCF timeIntervalSinceNow];
+    //NSLog(@"%d<%@>:substituted %f", num, name, since - temp);
 
     /* fft */
     vDSP_fft_zipD(_fftBaseSetup, &bComplex, 1, (vDSP_Length)bLog2n, FFT_FORWARD); ///
     vDSP_fft_zipD(_fftSubSetup, &sComplex, 1, (vDSP_Length)bLog2n, FFT_FORWARD); ///
 
-    temp  = since;
-    since = - [startTimeOfCCF timeIntervalSinceNow];
-    NSLog(@"%d<%@>:ffted %f", num, name, since - temp);
+    //temp  = since;
+    //since = - [startTimeOfCCF timeIntervalSinceNow];
+    //NSLog(@"%d<%@>:ffted %f", num, name, since - temp);
 
     /* prepare result */
-    FFTSetupD fftResSetup = vDSP_create_fftsetupD(bLog2n, kFFTRadix2);
     DSPDoubleSplitComplex rComplex;
     rComplex.realp = MEM_CALLOC(bNumOfSamples, sizeof(double));
     rComplex.imagp = MEM_CALLOC(bNumOfSamples, sizeof(double));
 
-    /* cross spectral */
     for (int i=0; i<bNumOfSamples; i++) {
         rComplex.realp[i] = bComplex.realp[i] * sComplex.realp[i]
                           + bComplex.imagp[i] * sComplex.imagp[i];
         rComplex.imagp[i] = bComplex.imagp[i] * sComplex.realp[i]
                           - bComplex.realp[i] * sComplex.imagp[i];
     }
+    // test
+    //vDSP_vmmaD(bComplex.realp, 1, sComplex.realp, 1, bComplex.imagp, 1, sComplex.imagp, 1, rComplex.realp, 1, bNumOfSamples);
+    //vDSP_vmmsbD(bComplex.imagp, 1, sComplex.realp, 1, bComplex.realp, 1, sComplex.imagp, 1, rComplex.imagp, 1, bNumOfSamples);
 
-    temp  = since;
-    since = - [startTimeOfCCF timeIntervalSinceNow];
-    NSLog(@"%d<%@>:cros spectaraled %f", num, name, since - temp);
+    //temp  = since;
+    //since = - [startTimeOfCCF timeIntervalSinceNow];
+    //NSLog(@"%d<%@>:cros spectaraled %f", num, name, since - temp);
 
-    vDSP_fft_zipD(fftResSetup, &rComplex, 1, (vDSP_Length)bLog2n, FFT_INVERSE); ///
+    vDSP_fft_zipD(_fftResSetup, &rComplex, 1, (vDSP_Length)bLog2n, FFT_INVERSE); ///
 
-    temp  = since;
-    since = - [startTimeOfCCF timeIntervalSinceNow];
-    NSLog(@"%d<%@>:inversed %f", num, name, since - temp);
+    //temp  = since;
+    //since = - [startTimeOfCCF timeIntervalSinceNow];
+    //NSLog(@"%d<%@>:inversed %f", num, name, since - temp);
 
     /* ccf upsampling */
-    unsigned int usingLimitSample = NextPowerOfTwo(kLimitSample * 4); ///test
-    unsigned int upedLimitSample  = (int)(usingLimitSample * pow(2.0, kPowerNumberOfTwo));
-    unsigned int usingRange       = usingLimitSample * 2;
-    unsigned int upedRange        = upedLimitSample * 2;
-    int usingLog2n                = log2(usingRange);
-    int upedLog2n                 = log2(upedRange);
+    unsigned int usingRange = self.usingRange;
+    unsigned int upedRange  = self.upedRange;
+    int usingLog2n          = self.usingLog2n;
+    int upedLog2n           = self.upedLog2n;
 
     DSPDoubleSplitComplex usingComplex, upedComplex;
     usingComplex.realp = MEM_CALLOC(usingRange, sizeof(double));
@@ -366,15 +495,13 @@
     upedComplex.realp  = MEM_CALLOC(upedRange, sizeof(double));
     upedComplex.imagp  = MEM_CALLOC(upedRange, sizeof(double));
 
-    FFTSetupD fftUsingSetup = vDSP_create_fftsetupD(usingLog2n, kFFTRadix2);
-    FFTSetupD fftUpedSetup  = vDSP_create_fftsetupD(upedLog2n, kFFTRadix2);
-
     ///
     //char nopath[100];
     //sprintf(nopath, "/Users/kosuke/Acoust/neo/ccf/noup_%s_up%d_%d.txt", cName, (int)kPowerNumberOfTwo, num);
     //FILE *nop = fopen(nopath, "w");
     for (int i=0; i<usingRange; i++) {
         usingComplex.realp[i] = rComplex.realp[i] / pow(2.0, bLog2n);
+        usingComplex.imagp[i] = rComplex.imagp[i] / pow(2.0, bLog2n);
         //fprintf(nop, "%d %f\n", i, usingComplex.realp[i]);
     }
     //fclose(nop);
@@ -385,35 +512,38 @@
     //NSLog(@"%d<%@>:ccf fft setuped %f", num, name, since - temp);
 
     /* fft */
-    vDSP_fft_zipD(fftUsingSetup, &usingComplex, 1, (vDSP_Length)usingLog2n, FFT_FORWARD);
+    vDSP_fft_zipD(_fftUsingSetup, &usingComplex, 1, (vDSP_Length)usingLog2n, FFT_FORWARD);
 
     /// test power spectral
-    char tespath[100];
-    sprintf(tespath, "/Users/kosuke/Acoust/neo/test/spectral_%s_up%d_%d.txt", cName, (int)kPowerNumberOfTwo, num);
-    FILE *testp = fopen(tespath, "w");
-    for (int i=0; i<usingRange; i++) {
-        double temp = pow(usingComplex.realp[i], 2.0) + pow(usingComplex.imagp[i], 2.0);
-        fprintf(testp, "%d %f\n", i, sqrt(temp));
-    }
-    fclose(testp);
+    //char tespath[100];
+    //sprintf(tespath, "/Users/kosuke/Acoust/neo/test/spectral_%s_up%d_%d.txt", cName, (int)kPowerNumberOfTwo, num);
+    //FILE *testp = fopen(tespath, "w");
+    //for (int i=0; i<usingRange; i++) {
+        //double temp = pow(usingComplex.realp[i], 2.0) + pow(usingComplex.imagp[i], 2.0);
+        //fprintf(testp, "%d %f\n", i, sqrt(temp));
+    //}
+    //fclose(testp);
     ///
-    
+
     //temp  = since;
     //since = - [startTimeOfCCF timeIntervalSinceNow];
     //NSLog(@"%d<%@>:ccf ffted %f", num, name, since - temp);
 
     /* interpolate */
-    for (int i=0; i<usingLimitSample; i++) {
+    for (int i=0; i<=usingRange/2; i++) {
         upedComplex.realp[i] = usingComplex.realp[i];
         upedComplex.imagp[i] = usingComplex.imagp[i];
     }
-    for (int i=upedRange-usingLimitSample; i<upedRange; i++) {
+    for (int i=(upedRange-usingRange/2)/*, j=usingRange/2*/; i<upedRange; i++/*, j--*/) {
         upedComplex.realp[i] = usingComplex.realp[i-upedRange+usingRange];
         upedComplex.imagp[i] = usingComplex.imagp[i-upedRange+usingRange];
+        // 単純に半分っぽい部分で反転して貼り付けると結果に誤差が出る
+        //upedComplex.realp[i] = usingComplex.realp[j];
+        //upedComplex.imagp[i] = usingComplex.imagp[j];
     }
 
     /* inverse */
-    vDSP_fft_zipD(fftUpedSetup, &upedComplex, 1, (vDSP_Length)upedLog2n, FFT_INVERSE);
+    vDSP_fft_zipD(_fftUpedSetup, &upedComplex, 1, (vDSP_Length)upedLog2n, FFT_INVERSE);
 
     //temp  = since;
     //since = - [startTimeOfCCF timeIntervalSinceNow];
@@ -435,31 +565,25 @@
     ///
 
     /* set result */
-    if (result->indexOfMax <  - 1) {
-        result->arrivalStatus = kIsAheadBase;
-        result->arrivalSampleLag = - (kUpedLimitSample - result->indexOfMax);
+    if (result->indexOfMax <  kUpedLimitSample) {
+        result->arrivalStatus = kIsAheadSub;
+        result->arrivalSampleLag = result->indexOfMax - kUpedLimitSample;
         result->arrivalTimeLag = (double)result->arrivalSampleLag * kUpedPerSample;
     }
-    else if ((result->indexOfMax == kUpedLimitSample)
-             || (result->indexOfMax == kUpedLimitSample - 1)) {
+    else if (result->indexOfMax == kUpedLimitSample) {
         result->arrivalStatus    = kIsSame;
         result->arrivalSampleLag = 0;
         result->arrivalTimeLag   = 0.0;
     }
     else {
-        result->arrivalStatus    = kIsAheadSub;
-        result->arrivalSampleLag = - (kUpedLimitSample - result->indexOfMax);
+        result->arrivalStatus    = kIsAheadBase;
+        result->arrivalSampleLag = result->indexOfMax - kUpedLimitSample;
         result->arrivalTimeLag   = (double)result->arrivalSampleLag * kUpedPerSample;
     }
 
     since = - [startTimeOfCCF timeIntervalSinceNow];
     NSLog(@"%d<%@> DONE CCF ALL: %f", num, name, since);
 
-    //vDSP_destroy_fftsetupD(fftBaseSetup);
-    //vDSP_destroy_fftsetupD(fftSubSetup);
-    //vDSP_destroy_fftsetupD(fftResSetup);
-    vDSP_destroy_fftsetupD(fftUsingSetup);
-    vDSP_destroy_fftsetupD(fftUpedSetup);
     free(bComplex.realp);
     free(bComplex.imagp);
     free(sComplex.realp);
@@ -539,7 +663,7 @@
                       name:(NSString *)name {
 
     NSDate *startTimeOfCCF = [NSDate date];
-    NSTimeInterval since, temp;
+    NSTimeInterval since;//, temp;
     unsigned int num = _count;
 
     result->max = 0;
@@ -1077,7 +1201,7 @@
     fclose(fp);
     if (result->indexOfMax < kUpedLimitSample - 1) {
         result->arrivalStatus    = kIsAheadBase;
-        result->arrivalSampleLag = - (kUpedLimitSample -1 - result->indexOfMax);
+        result->arrivalSampleLag =  (kUpedLimitSample -1 - result->indexOfMax);
         result->arrivalTimeLag   = (double)result->arrivalSampleLag * kUpedPerSample;
     }
     else if ((result->indexOfMax == kUpedLimitSample)
@@ -1088,7 +1212,7 @@
     }
     else {
         result->arrivalStatus    = kIsAheadSub;
-        result->arrivalSampleLag = - (kUpedLimitSample + 1 - result->indexOfMax);
+        result->arrivalSampleLag =  (kUpedLimitSample + 1 - result->indexOfMax);
         result->arrivalTimeLag   = (double)result->arrivalSampleLag * kUpedPerSample;
     }
 

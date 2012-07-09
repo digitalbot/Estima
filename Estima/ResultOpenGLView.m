@@ -120,7 +120,7 @@
         glPopMatrix();
     }
     else {
-        transRatio = ((double)num + 1) / (kResultCount * 2.0 + (num / 5.0));
+        transRatio = ((double)num + 1) / (kResultCount * 2.0 + ((num + (num / 50)) / 5.0));
         glPushMatrix();
         {
             glColor4d(0.6, 0.0, 0.3, transRatio);
